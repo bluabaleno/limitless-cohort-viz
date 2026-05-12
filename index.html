@@ -77,10 +77,10 @@
     color: var(--text-dim);
     font-size: 13px;
     margin-bottom: 24px;
-    max-width: 760px;
+    max-width: 800px;
   }
 
-  /* Atom viz */
+  /* Bubble viz containers */
   .atom-wrap {
     background: var(--bg-elev);
     border: 1px solid var(--border);
@@ -89,7 +89,8 @@
     position: relative;
     overflow: hidden;
   }
-  #atom-svg { width: 100%; height: 680px; display: block; cursor: grab; }
+  .atom-svg-hero { width: 100%; height: 680px; display: block; }
+  .atom-svg-spotlight { width: 100%; height: 440px; display: block; }
   .atom { cursor: pointer; }
   .atom-circle { transition: fill-opacity 0.2s, stroke-width 0.2s; }
   .atom:hover .atom-circle { fill-opacity: 1; stroke-width: 3; }
@@ -107,7 +108,14 @@
     text-anchor: middle;
     pointer-events: none;
   }
-  .bond { stroke: #4a5460; fill: none; pointer-events: none; }
+  .bond { stroke: #6e7585; fill: none; pointer-events: none; }
+  .bond-label {
+    fill: var(--text-dim);
+    font-size: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    text-anchor: middle;
+    pointer-events: none;
+  }
 
   .legend {
     display: flex; gap: 18px;
@@ -118,16 +126,16 @@
   }
   .legend-item { display: flex; align-items: center; gap: 6px; }
   .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .legend-bond { width: 24px; height: 2px; background: #4a5460; }
-  .legend-bond.thick { height: 4px; background: #6e7585; }
+  .legend-bond { width: 24px; height: 2px; background: #6e7585; opacity: 0.4; }
+  .legend-bond.thick { height: 4px; opacity: 0.85; }
 
   .hint {
     position: absolute;
-    bottom: 32px;
+    bottom: 28px;
     left: 50%;
     transform: translateX(-50%);
     color: var(--text-dimmer);
-    font-size: 11px;
+    font-size: 10.5px;
     pointer-events: none;
     background: rgba(10, 13, 18, 0.5);
     padding: 4px 10px;
@@ -135,6 +143,37 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
+
+  /* Spotlight intro row (description above each bubble viz) */
+  .spotlight-intro {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 32px;
+    margin-bottom: 16px;
+    align-items: end;
+  }
+  .spotlight-intro .stats {
+    text-align: right;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .spotlight-intro .stats .v {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    font-size: 14px;
+    margin: 0 4px;
+    font-weight: 600;
+  }
+
+  /* Spotlight detail strip */
+  .spotlight-detail {
+    margin-top: 14px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.6;
+    max-width: 900px;
+  }
+  .spotlight-detail strong { color: var(--text); font-weight: 600; }
 
   /* Drill-down panel */
   .panel-backdrop {
@@ -151,7 +190,7 @@
   .panel {
     position: fixed;
     right: 0; top: 0; bottom: 0;
-    width: 440px;
+    width: 460px;
     max-width: 100%;
     background: var(--bg-elev);
     border-left: 1px solid var(--border-light);
@@ -230,97 +269,6 @@
   .bond-dot { width: 8px; height: 8px; border-radius: 50%; }
   .bond-strength { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
 
-  /* Time horizon spotlight */
-  .horizon-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .horizon-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    border-top: 3px solid;
-  }
-  .horizon-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 4px; }
-  .horizon-card .name { font-weight: 600; font-size: 14px; margin-bottom: 10px; }
-  .horizon-card .vol { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--text); }
-  .horizon-card .sub { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
-  .horizon-card ul { list-style: none; padding-left: 0; }
-  .horizon-card li { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
-  .horizon-axis {
-    display: flex; justify-content: space-between;
-    margin-top: 4px;
-    font-size: 11px;
-    color: var(--text-dimmer);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  /* Election cycles */
-  .election-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-  }
-  .election-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-  }
-  .election-card .era { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 6px; }
-  .election-card .title { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
-  .election-card .figures { display: flex; gap: 18px; margin-bottom: 14px; }
-  .election-card .figures .v { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
-  .election-card .figures .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dimmer); }
-  .election-card ul { list-style: none; padding: 0; border-top: 1px solid var(--border); padding-top: 12px; }
-  .election-card li { font-size: 12px; padding: 3px 0; color: var(--text-dim); }
-  .election-card li:before { content: "·"; color: var(--text-dimmer); margin-right: 6px; }
-
-  /* Gradient (mega-cluster) */
-  .gradient-wrap {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-  }
-  .gradient-bar {
-    height: 10px;
-    background: linear-gradient(to right, #f0b860, #e89244, #d97632, #b85a28);
-    border-radius: 5px;
-    margin: 18px 0 14px;
-  }
-  .gradient-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 24px; }
-  .gradient-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .gradient-card {
-    background: var(--bg-elev-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-  }
-  .gradient-card .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
-  .gradient-card .vol { font-family: 'JetBrains Mono', monospace; font-size: 17px; }
-  .gradient-card .stat-row { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
-  .gradient-card ul { list-style: none; padding: 0; }
-  .gradient-card li { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
-
-  /* Sports row */
-  .sport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .sport-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-top: 3px solid;
-    border-radius: 10px;
-    padding: 18px;
-  }
-  .sport-card .name { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
-  .sport-card .stats { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
-  .sport-card ul { list-style: none; padding: 0; }
-  .sport-card li { font-size: 12px; color: var(--text-dim); padding: 2px 0; }
-
   /* Method card */
   .method-grid {
     display: grid;
@@ -348,6 +296,12 @@
     text-align: center;
   }
   footer a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dotted var(--text-dimmer); }
+
+  @media (max-width: 700px) {
+    .spotlight-intro { grid-template-columns: 1fr; gap: 12px; }
+    .spotlight-intro .stats { text-align: left; }
+    .method-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -357,13 +311,13 @@
     <div class="eyebrow">Atomic Networks · Polymarket Behavioral Cohort Analysis · May 2026</div>
     <h1>The atomic networks of Polymarket — how traders actually cluster, and where the bonds form.</h1>
     <p class="lede">
-      Behavioral community detection on 59.2M trader–market edges across Polymarket's full history (Oct 2020 – Jan 2026, 1.98M wallets, 300K markets) surfaces 18 atomic networks — cohorts of traders bonded by shared trading behavior. The bonds between atoms (overlap in trader bases) reveal the actual audience structure of the platform. Time horizon splits crypto traders into five separate atoms on the same underlyings. Election eras are distinct atoms with measurable bonds across cycles. "Sports" splits into two. The Polymarket category tags don't see any of this — only behavior does.
+      Behavioral community detection on 59.2M trader–market edges across Polymarket's full history (Oct 2020 – Jan 2026, 1.98M wallets, 300K markets) surfaces 18 networks of traders bonded by shared trading behavior. The bonds between networks (overlap in trader bases) reveal the actual audience structure of the platform. Time horizon splits crypto traders into five distinct networks on the same underlyings. Election eras are separate networks with measurable bonds across cycles. "Sports" splits into two. Polymarket's category tags don't see any of this — only behavior does.
     </p>
     <div class="stats-strip">
       <div class="stat"><div class="num">1.98M</div><div class="label">Wallets</div></div>
       <div class="stat"><div class="num">300,201</div><div class="label">Markets</div></div>
       <div class="stat"><div class="num">59.2M</div><div class="label">Trader–market edges</div></div>
-      <div class="stat"><div class="num">18</div><div class="label">Atoms found</div></div>
+      <div class="stat"><div class="num">18</div><div class="label">Networks</div></div>
       <div class="stat"><div class="num">153</div><div class="label">Bonds measured</div></div>
       <div class="stat"><div class="num">0.78</div><div class="label">Modularity</div></div>
     </div>
@@ -371,11 +325,11 @@
 
   <!-- HERO ATOMIC NETWORK VIZ -->
   <section>
-    <h2>The 18 atoms · sized by volume · bonds by shared traders</h2>
-    <p class="section-sub">Each atom is a behavioral cohort. Size = total trade volume. Bonds = the count of traders shared between two atoms (only meaningful bonds shown — top ~25 pairs by shared-trader count). The clustering had no knowledge of Polymarket's category tags — these atoms emerge purely from who-trades-with-whom. Click any atom to drill in.</p>
+    <h2>The 18 networks · sized by volume · bonds by shared traders</h2>
+    <p class="section-sub">Each circle is a behavioral cluster. Size = total trade volume. Bonds = traders shared between two clusters (top ~30 by shared-trader count). The clustering had no knowledge of Polymarket's category tags — these networks emerge purely from who-trades-with-whom. Click any cluster to drill in.</p>
     <div class="atom-wrap">
-      <svg id="atom-svg"></svg>
-      <div class="hint">Click any atom to inspect · drag atoms to rearrange</div>
+      <svg id="hero-svg" class="atom-svg-hero"></svg>
+      <div class="hint">Click any cluster to inspect · drag to rearrange</div>
       <div class="legend">
         <div class="legend-item"><span class="legend-dot" style="background:#e8a25a"></span>2024 election mega</div>
         <div class="legend-item"><span class="legend-dot" style="background:#d97b4a"></span>2024 Dem primary / Biden</div>
@@ -394,212 +348,79 @@
     </div>
   </section>
 
-  <!-- TIME HORIZON SPOTLIGHT -->
+  <!-- SPOTLIGHT 1: Crypto time-horizon -->
   <section>
-    <h2>Spotlight 1 · Time horizon splits crypto traders into five atoms</h2>
-    <p class="section-sub">Five distinct atoms trade the same underlyings (BTC / ETH / SOL). They do share some traders — adjacent horizons bond more strongly (15-min BTC ↔ hourly BTC, Jaccard 0.23). But the populations are mostly distinct. Someone betting BTC at 15-min intervals is a different audience from someone betting BTC weekly price targets.</p>
-    <div class="horizon-grid">
-      <div class="horizon-card" style="border-top-color:#6e9eff">
-        <div class="label">Atom 3</div>
-        <div class="name">15-min ETH / SOL</div>
-        <div class="vol">$197M</div>
-        <div class="sub">4,378 markets · 30.6K traders</div>
-        <ul>
-          <li>· ETH Up/Down (15-min slots)</li>
-          <li>· SOL Up/Down (15-min slots)</li>
-          <li>· Highest mean degree of any atom</li>
-        </ul>
-      </div>
-      <div class="horizon-card" style="border-top-color:#5a8df0">
-        <div class="label">Atom 4</div>
-        <div class="name">15-min BTC</div>
-        <div class="vol">$944M</div>
-        <div class="sub">6,261 markets · 84.3K traders</div>
-        <ul>
-          <li>· BTC Up/Down (15-min)</li>
-          <li>· Jan 2025 wave</li>
-          <li>· Tightly bonded to Atom 5</li>
-        </ul>
-      </div>
-      <div class="horizon-card" style="border-top-color:#4279e0">
-        <div class="label">Atom 5</div>
-        <div class="name">Hourly BTC / ETH</div>
-        <div class="vol">$294M</div>
-        <div class="sub">4,323 markets · 71.9K traders</div>
-        <ul>
-          <li>· BTC Up/Down (1hr)</li>
-          <li>· ETH Up/Down (1hr)</li>
-          <li>· Recent months</li>
-        </ul>
-      </div>
-      <div class="horizon-card" style="border-top-color:#2a64d0">
-        <div class="label">Atom 7</div>
-        <div class="name">Hourly BTC (older)</div>
-        <div class="vol">$547M</div>
-        <div class="sub">8,395 markets · 75.4K traders</div>
-        <ul>
-          <li>· BTC Up/Down (1hr)</li>
-          <li>· Oct / Jul period</li>
-          <li>· Temporally separate cohort</li>
-        </ul>
-      </div>
-      <div class="horizon-card" style="border-top-color:#1a4fc0">
-        <div class="label">Atom 10</div>
-        <div class="name">Daily / price-target</div>
-        <div class="vol">$2.0B</div>
-        <div class="sub">15,086 markets · 395K traders</div>
-        <ul>
-          <li>· BTC reach $115K in June</li>
-          <li>· SOL above $280 on Oct 10</li>
-          <li>· Bonded to election atom</li>
-        </ul>
+    <h2>Spotlight · Time horizon splits crypto traders into five networks</h2>
+    <p class="section-sub">Five distinct clusters trade the same underlyings (BTC / ETH / SOL). They share some traders — adjacent horizons bond more strongly (15-min BTC ↔ hourly BTC, Jaccard 0.23). But the populations are mostly distinct.</p>
+    <div class="spotlight-intro">
+      <div></div>
+      <div class="stats">
+        Showing <span class="v">5</span> clusters · <span class="v">$4.0B</span> total · <span class="v">~263K</span> distinct traders
       </div>
     </div>
-    <div class="horizon-axis">
-      <span>← short horizon · scalper</span>
-      <span>longer horizon · positional →</span>
+    <div class="atom-wrap">
+      <svg id="spot-crypto-svg" class="atom-svg-spotlight"></svg>
+      <div class="hint">Hover to peek · click for full breakdown</div>
+    </div>
+    <div class="spotlight-detail">
+      <strong>The interesting bonds inside:</strong> 15-min BTC (Cluster 4) ↔ Hourly BTC-recent (Cluster 5) share 29K traders at Jaccard 0.23 — the strongest in this subset. 15-min ETH/SOL (Cluster 3) is the most isolated. Cluster 10 (daily / price-target) is the largest by volume but has the broadest, most diffuse audience.
     </div>
   </section>
 
-  <!-- ELECTION CYCLES -->
+  <!-- SPOTLIGHT 2: Election eras -->
   <section>
-    <h2>Spotlight 2 · Election eras are separate atoms — with bonds across cycles</h2>
-    <p class="section-sub">Three distinct atoms for three election cycles. The 2024 primary and 2024 general atoms share 569K traders (Jaccard 0.32) — the strongest bond in the entire network. 2020 voters mostly don't return for 2024 (much weaker bond), meaning each cycle creates a substantially fresh audience.</p>
-    <div class="election-grid">
-      <div class="election-card">
-        <div class="era">Atom 14</div>
-        <div class="title">2020 election + COVID era</div>
-        <div class="figures">
-          <div><div class="v">$340M</div><div class="l">Volume</div></div>
-          <div><div class="v">2,413</div><div class="l">Markets</div></div>
-        </div>
-        <ul>
-          <li>Trump 2020 US Presidential</li>
-          <li>Biden 2020 inauguration</li>
-          <li>BTC ETF approval Jan '21</li>
-          <li>COVID vaccine 100M doses</li>
-          <li>Arbitrum airdrop</li>
-        </ul>
+    <h2>Spotlight · Election eras are separate networks with bonds across cycles</h2>
+    <p class="section-sub">Three election-era clusters. The 2024-primary and 2024-general clusters share 569K traders (Jaccard 0.32) — the single strongest bond in the entire network. 2020 voters mostly didn't return for 2024 (much weaker bond). Each cycle creates a substantially fresh audience.</p>
+    <div class="spotlight-intro">
+      <div></div>
+      <div class="stats">
+        Showing <span class="v">3</span> clusters · <span class="v">$21.6B</span> total · <span class="v">~1.86M</span> distinct traders
       </div>
-      <div class="election-card">
-        <div class="era">Atom 6</div>
-        <div class="title">2024 Dem primary / Biden cycle</div>
-        <div class="figures">
-          <div><div class="v">$4.3B</div><div class="l">Volume</div></div>
-          <div><div class="v">13,258</div><div class="l">Markets</div></div>
-        </div>
-        <ul>
-          <li>Will Biden finish his term?</li>
-          <li>Harris 2024 Dem nomination</li>
-          <li>Tyson vs Paul</li>
-          <li>Trump launch a coin</li>
-          <li>Fed cuts 6+ times in 2024</li>
-        </ul>
-      </div>
-      <div class="election-card">
-        <div class="era">Atom 1 · mega</div>
-        <div class="title">2024 US Presidential cycle</div>
-        <div class="figures">
-          <div><div class="v">$17.0B</div><div class="l">Volume</div></div>
-          <div><div class="v">24,956</div><div class="l">Markets</div></div>
-        </div>
-        <ul>
-          <li>Trump 2024 — $1.64B single market</li>
-          <li>Harris 2024 — $887M</li>
-          <li>Trump inauguration — $478M</li>
-          <li>Mamdani NYC mayoral</li>
-          <li>Fed rate decisions trade here</li>
-        </ul>
-      </div>
+    </div>
+    <div class="atom-wrap">
+      <svg id="spot-election-svg" class="atom-svg-spotlight"></svg>
+      <div class="hint">Hover to peek · click for full breakdown</div>
+    </div>
+    <div class="spotlight-detail">
+      <strong>The interesting bonds inside:</strong> 2024 Dem primary ↔ 2024 general is the strongest bond in the entire network — 569K shared traders, Jaccard 0.32. By contrast, 2020 ↔ 2024 general only shares 25K traders (Jaccard 0.015) — basically two different generations of Polymarket users.
     </div>
   </section>
 
-  <!-- 2024 MEGA-COHORT GRADIENT -->
+  <!-- SPOTLIGHT 3: Inside the mega-cluster -->
   <section>
-    <h2>Spotlight 3 · The 2024 election atom is a gradient, not tribes</h2>
-    <p class="section-sub">Recursive Louvain on Atom 1 surfaces 4 sub-atoms with weak separation (modularity 0.226). It's not separate audiences — it's the same population at different attention intensities. Front-page-only whales at one end, niche-everything tourists at the other.</p>
-    <div class="gradient-wrap">
-      <div class="gradient-bar"></div>
-      <div class="gradient-labels">
-        <span>← Few markets, mega volume</span>
-        <span>Many markets, small per-user →</span>
+    <h2>Spotlight · Inside Cluster 1 — the 2024 mega-cluster is a gradient, not tribes</h2>
+    <p class="section-sub">Recursive Louvain on Cluster 1 ($17B, 24,956 markets) surfaces 4 internal sub-communities — but with weak separation (modularity 0.226). They're not distinct tribes, they're the same population at different intensities of engagement.</p>
+    <div class="spotlight-intro">
+      <div></div>
+      <div class="stats">
+        <span class="v">4</span> sub-communities · <span class="v">$17B</span> total · <span class="v">~16.6K</span> active traders inside
       </div>
-      <div class="gradient-cards">
-        <div class="gradient-card" style="border-left: 3px solid #f0b860">
-          <div class="name">Headline whales</div>
-          <div class="vol">$8.9B</div>
-          <div class="stat-row">1,078 markets · 2,801 users</div>
-          <ul>
-            <li>Trump 2024 — $1.64B</li>
-            <li>Harris 2024 — $887M</li>
-            <li>Trump inauguration</li>
-            <li>Harris popular vote</li>
-            <li>UCL / NBA Finals</li>
-          </ul>
-        </div>
-        <div class="gradient-card" style="border-left: 3px solid #e89244">
-          <div class="name">News-cycle generalists</div>
-          <div class="vol">$5.4B</div>
-          <div class="stat-row">12,017 markets · 2,964 users</div>
-          <ul>
-            <li>Zelenskyy wear a suit?</li>
-            <li>TikTok banned in US?</li>
-            <li>Trump release Epstein files</li>
-            <li>Russia-Ukraine ceasefire</li>
-            <li>Israel-Iran ceasefire</li>
-          </ul>
-        </div>
-        <div class="gradient-card" style="border-left: 3px solid #d97632">
-          <div class="name">International politics</div>
-          <div class="vol">$1.6B</div>
-          <div class="stat-row">4,649 markets · ~5K users</div>
-          <ul>
-            <li>South Korea presidential</li>
-            <li>Romania presidential</li>
-            <li>Poland presidential</li>
-            <li>Honduras presidential</li>
-            <li>Stanley Cup</li>
-          </ul>
-        </div>
-        <div class="gradient-card" style="border-left: 3px solid #b85a28">
-          <div class="name">Niche tourists</div>
-          <div class="vol">$1.1B</div>
-          <div class="stat-row">6,948 markets · ~7K users</div>
-          <ul>
-            <li>d4vd most-searched Google</li>
-            <li>OpenAI new model Dec 11</li>
-            <li>Trump nominate Powell</li>
-            <li>NJ governor 2025</li>
-            <li>Vietnam CCP general secretary</li>
-          </ul>
-        </div>
-      </div>
+    </div>
+    <div class="atom-wrap">
+      <svg id="spot-mega-svg" class="atom-svg-spotlight"></svg>
+      <div class="hint">Inner structure of the largest cluster</div>
+    </div>
+    <div class="spotlight-detail">
+      <strong>The gradient runs:</strong> Headline whales ($8.9B in just 1,078 markets — Trump 2024, Harris 2024, inauguration) → News-cycle generalists ($5.4B across 12K markets — Zelenskyy's suit, TikTok ban, Russia/Ukraine, Epstein files) → International politics specialists ($1.6B — Korea/Romania/Poland presidentials) → Niche tourists ($1.1B — d4vd Google searches, NJ governor, Vietnam CCP). Modularity 0.226 is low because these aren't separate audiences — they're the same wallets at different attention budgets.
     </div>
   </section>
 
-  <!-- SPORTS SPOTLIGHT -->
+  <!-- SPOTLIGHT 4: Sports -->
   <section>
-    <h2>Spotlight 4 · "Sports" is two distinct atoms with a measurable bond</h2>
-    <p class="section-sub">Polymarket bundles all sports under one tag — but the wallet base is split. NFL + League of Legends bettors share some traders with NBA + soccer + boxing bettors (Jaccard 0.18), but the bond is moderate, not dominant. Two distinct audiences hidden under one platform category.</p>
-    <div class="sport-grid">
-      <div class="sport-card" style="border-top-color: #a78bfa">
-        <div class="name">Atom 2 · NFL + esports</div>
-        <div class="stats">$5.9B · 22,346 markets · 315K traders</div>
-        <ul>
-          <li>· NFL spreads (Rams vs Bears, Bills vs Broncos, etc.)</li>
-          <li>· LoL match outcomes (T1 vs KT Rolster, etc.)</li>
-          <li>· Boxing event markets</li>
-        </ul>
+    <h2>Spotlight · "Sports" is two distinct networks under one tag</h2>
+    <p class="section-sub">Polymarket bundles all sports under one category — but the wallet base is split. NFL + League of Legends bettors share some traders with NBA + soccer + boxing bettors (Jaccard 0.18), but the bond is moderate, not dominant. Two distinct audiences hidden under one tag.</p>
+    <div class="spotlight-intro">
+      <div></div>
+      <div class="stats">
+        Showing <span class="v">2</span> clusters · <span class="v">$7.7B</span> total · <span class="v">~442K</span> distinct traders
       </div>
-      <div class="sport-card" style="border-top-color: #c878fa">
-        <div class="name">Atom 9 · NBA + soccer + boxing</div>
-        <div class="stats">$1.8B · 7,701 markets · 209K traders</div>
-        <ul>
-          <li>· NBA Finals series (Pacers vs Thunder, etc.)</li>
-          <li>· Serie A title race</li>
-          <li>· Canelo vs Crawford boxing</li>
-        </ul>
-      </div>
+    </div>
+    <div class="atom-wrap">
+      <svg id="spot-sports-svg" class="atom-svg-spotlight"></svg>
+      <div class="hint">Hover to peek · click for full breakdown</div>
+    </div>
+    <div class="spotlight-detail">
+      <strong>The interesting bonds:</strong> ~81K traders sit at the intersection of NFL+esports and NBA+soccer — overlap exists, but the modal trader bets in one or the other, not both. NFL+esports is also strongly bonded to the 2024 election cluster (237K shared) — the election-tourist audience also bets NFL.
     </div>
   </section>
 
@@ -611,18 +432,19 @@
       <div class="method-card">
         <p><strong style="color:var(--text)">Dataset:</strong> Jon-Becker/prediction-market-analysis — full Polymarket trade history scraped from Polygon (Oct 2020 – Jan 2026). 59.2M trader–market edges after extracting OrderFilled and FPMM events.</p>
         <p><strong style="color:var(--text)">Filtering:</strong> Excluded 2 protocol contracts (CTF Exchange + NegRisk CTF Exchange) that appear as maker/taker in events but aren't real traders. Dropped 201 dust spammers (mean trade &lt; $1, traded 1000+ markets) and 5,342 ultra-generalists (1000+ markets, blurs community boundaries). Singletons (1 market only) contribute no pairs.</p>
-        <p><strong style="color:var(--text)">Projection:</strong> Trader-market bipartite → market-market via Jaccard on shared traders (threshold ≥ 5 shared traders, Jaccard ≥ 0.01). Unweighted, not volume-weighted — answers "where do traders co-locate" not "where does capital co-flow."</p>
+        <p><strong style="color:var(--text)">Projection:</strong> Trader–market bipartite → market–market via Jaccard on shared traders (threshold ≥ 5 shared traders, Jaccard ≥ 0.01). Unweighted, not volume-weighted — answers "where do traders co-locate" not "where does capital co-flow."</p>
         <p><strong style="color:var(--text)">Clustering:</strong> Louvain via igraph, weighted by Jaccard. Modularity 0.7838 — &gt; 0.6 is generally considered well-separated.</p>
-        <p><strong style="color:var(--text)">Atomic bonds:</strong> For each atom-pair, count traders who participated in both. 153 atom-pairs measured; the network viz shows the top ~25 bonds (≥10K shared traders) — below that, bonds become statistical noise rather than meaningful audience overlap.</p>
+        <p><strong style="color:var(--text)">Bonds:</strong> For each cluster-pair, count traders who participated in both. 153 cluster-pairs measured; the network viz shows the top ~30 bonds. Recursive Louvain on Cluster 1 (the mega-cluster) surfaces 4 sub-communities with low modularity (0.226) — the gradient, not tribes, finding.</p>
       </div>
       <div class="stat-card">
         <div class="row"><span class="l">Wallets analyzed</span><span class="v">1,701,049</span></div>
         <div class="row"><span class="l">Markets in projection</span><span class="v">133,217</span></div>
         <div class="row"><span class="l">Edges in market graph</span><span class="v">61,000,000</span></div>
         <div class="row"><span class="l">Mean degree</span><span class="v">916</span></div>
-        <div class="row"><span class="l">Modularity</span><span class="v">0.7838</span></div>
-        <div class="row"><span class="l">Atoms (cohorts)</span><span class="v">18</span></div>
-        <div class="row"><span class="l">Bonds shown</span><span class="v">~25 top</span></div>
+        <div class="row"><span class="l">Modularity (global)</span><span class="v">0.7838</span></div>
+        <div class="row"><span class="l">Clusters found</span><span class="v">18</span></div>
+        <div class="row"><span class="l">Sub-communities in C1</span><span class="v">4</span></div>
+        <div class="row"><span class="l">Bonds shown</span><span class="v">top 30</span></div>
         <div class="row"><span class="l">Pipeline runtime</span><span class="v">~50 min</span></div>
       </div>
     </div>
@@ -639,7 +461,7 @@
 <div class="panel" id="panel">
   <div class="panel-header">
     <button class="panel-close" id="panel-close">×</button>
-    <div class="panel-eyebrow" id="p-eyebrow">Atom</div>
+    <div class="panel-eyebrow" id="p-eyebrow">Cluster</div>
     <div class="panel-title" id="p-title">—</div>
     <div class="panel-stats">
       <div class="panel-stat"><div class="v" id="p-vol">—</div><div class="l">Volume</div></div>
@@ -650,55 +472,55 @@
   <div class="panel-body">
     <h4>Top markets</h4>
     <ul id="p-markets-list"></ul>
-    <h4>Bonded atoms · shared traders</h4>
+    <h4 id="p-bonds-header">Bonded clusters · shared traders</h4>
     <ul class="bond-list" id="p-bonds"></ul>
-    <h4>Theme</h4>
-    <div id="p-theme" style="font-size: 13px; color: var(--text-dim);"></div>
+    <h4>Description</h4>
+    <div id="p-theme" style="font-size: 13px; color: var(--text-dim); line-height: 1.6;"></div>
   </div>
 </div>
 
 <script>
-// ---- Cluster (atom) data ----
+// ---- Cluster data ----
 const clusters = [
-  { id: 1, name: "2024 US Presidential", short: "2024 election (mega)", theme: "Politics · 2024 general election cycle. Dominated by Trump/Harris markets but absorbs the news-cycle whatever-is-trending audience. By volume, the largest atom in the network — $17B in 24,956 markets.", color: "#e8a25a", markets: 24956, volume: 17000, traders: 1668380,
+  { id: 1, name: "2024 US Presidential", short: "2024 election", theme: "Politics · 2024 general election cycle. Dominated by Trump/Harris markets but absorbs the news-cycle whatever-is-trending audience. By volume, the largest cluster in the network — $17B in 24,956 markets.", color: "#e8a25a", markets: 24956, volume: 17000, traders: 1668380,
     top: ["Will Donald Trump win the 2024 US Presidential Election? ($1.64B)", "Will Kamala Harris win the 2024 US Presidential Election? ($887M)", "Will Donald Trump be inaugurated? ($478M)", "Will Zohran Mamdani win the 2025 NYC mayoral election? ($186M)", "Kamala Harris wins the popular vote? ($159M)", "Will Inter Milan win the UEFA Champions League? ($151M)", "Fed decreases interest rates by 50+ bps after December 2025 meeting?", "Will Zelenskyy wear a suit before July?", "Will Trump release the Epstein files by December 19?", "Russia x Ukraine ceasefire in 2025?"] },
-  { id: 2, name: "NFL + esports", short: "NFL + esports", theme: "Sports · NFL spreads + League of Legends e-sports + boxing. The 'gaming-adjacent young male sports bettor' audience. Shares ~80K traders with the NBA+soccer atom but the populations are mostly distinct.", color: "#a78bfa", markets: 22346, volume: 5900, traders: 314852,
+  { id: 2, name: "NFL + esports", short: "NFL + esports", theme: "Sports · NFL spreads + League of Legends e-sports + boxing. The 'gaming-adjacent young male sports bettor' audience. Shares ~80K traders with the NBA+soccer cluster but the populations are mostly distinct.", color: "#a78bfa", markets: 22346, volume: 5900, traders: 314852,
     top: ["LoL: T1 vs KT Rolster (BO5)", "Rams vs. Bears (NFL)", "Bills vs. Broncos (NFL)", "LoL: Anyone's Legend vs T1 (BO5)", "Cowboys vs. Lions (NFL)", "Bills vs. Jaguars (NFL)", "LoL: Gen.G vs KT Rolster (BO5)", "LoL: T1 vs Top Esports (BO5)"] },
-  { id: 10, name: "Crypto · daily / price-target", short: "Crypto daily", theme: "Crypto · 15K markets of 'will BTC reach $X by date' or 'will SOL be above $X on date'. Longer-horizon crypto bettors. Bonded to the election mega-atom (Jaccard 0.20) — election tourists also play with crypto price targets.", color: "#1a4fc0", markets: 15086, volume: 2000, traders: 395337,
+  { id: 10, name: "Crypto · daily / price-target", short: "Crypto daily", theme: "Crypto · 15K markets of 'will BTC reach $X by date' or 'will SOL be above $X on date'. Longer-horizon crypto bettors. Bonded to the election mega-cluster (Jaccard 0.20) — election tourists also play with crypto price targets.", color: "#1a4fc0", markets: 15086, volume: 2000, traders: 395337,
     top: ["Bitcoin above $103,000 on June 20?", "Will Bitcoin reach $115K in June?", "Will the price of Solana be above $280 on October 10?", "Will Bitcoin reach $138,000 October 6-12?", "Bitcoin Up or Down on May 24?", "Will Bitcoin reach $110k in May?", "Will Bitcoin reach $115k in May?"] },
-  { id: 6, name: "2024 Dem primary / Biden", short: "2024 Dem primary", theme: "Politics · 2024 Democratic primary cycle, Biden-finish-term era, plus Tyson-Paul and early Trump-coin news. Strongest bond in the network: 569K shared traders with Atom 1 (2024 general) — same political audience flows across primary → general.", color: "#d97b4a", markets: 13258, volume: 4300, traders: 662595,
+  { id: 6, name: "2024 Dem primary / Biden", short: "2024 Dem primary", theme: "Politics · 2024 Democratic primary cycle, Biden-finish-term era, plus Tyson-Paul and early Trump-coin news. Strongest bond in the network: 569K shared traders with Cluster 1 (2024 general) — same political audience flows across primary → general.", color: "#d97b4a", markets: 13258, volume: 4300, traders: 662595,
     top: ["Will Biden finish his term?", "Will Kamala Harris win the 2024 Democratic Presidential Nomination?", "Will Trump launch a coin before the election?", "Will Joe Biden win the 2024 Democratic Presidential Nomination?", "Will there be a US Government shutdown?", "Will Fed cut interest rates 6+ times in 2024?", "Will Mike Tyson win his boxing match against Jake Paul?", "Will Joe Biden win the 2024 US Presidential Election?"] },
-  { id: 8, name: "Mixed · darts + 15-min BTC", short: "Mixed atom", theme: "Mixed / probable artifact — 15-min BTC slots from Dec/Nov merged with PDC darts championship markets. May reflect a temporal-window quirk in the data, not a coherent cohort.", color: "#6b7585", markets: 9291, volume: 409, traders: 75394,
+  { id: 8, name: "Mixed · darts + 15-min BTC", short: "Mixed", theme: "Mixed / probable artifact — 15-min BTC slots from Dec/Nov merged with PDC darts championship markets. May reflect a temporal-window quirk in the data, not a coherent cohort.", color: "#6b7585", markets: 9291, volume: 409, traders: 75394,
     top: ["Will Gian van Veen win the PDC World Darts Championship?", "Bitcoin Up or Down — Dec 4, 5:30AM-5:45AM ET", "Bitcoin Up or Down — Dec 5, 2:45AM-3:00AM ET", "Bitcoin Up or Down — Nov 21, 2:45AM-3:00AM ET", "Bitcoin Up or Down — Dec 4, 7:00AM-7:15AM ET"] },
-  { id: 7, name: "Hourly BTC (older period)", short: "Hourly BTC (older)", theme: "Crypto · Hourly BTC Up/Down markets from an earlier period (July, October). Temporally separate from Atom 5 — different vintages of the same product attract different cohorts.", color: "#2a64d0", markets: 8395, volume: 547, traders: 75368,
+  { id: 7, name: "Hourly BTC (older)", short: "Hourly BTC (older)", theme: "Crypto · Hourly BTC Up/Down markets from an earlier period (July, October). Temporally separate from Cluster 5 — different vintages of the same product attract different cohorts.", color: "#2a64d0", markets: 8395, volume: 547, traders: 75368,
     top: ["Bitcoin Up or Down — October 14, 5PM ET", "Bitcoin Up or Down — July 19, 5PM ET", "Bitcoin Up or Down — October 11, 4AM ET", "Bitcoin Up or Down — October 14, 4AM ET", "Bitcoin Up or Down — October 18, 3AM ET"] },
-  { id: 9, name: "NBA + soccer + boxing", short: "NBA + soccer + boxing", theme: "Sports · NBA Finals series, Serie A, boxing events. Distinct from the NFL+esports atom (Jaccard 0.18 bond, not dominant overlap). The other sports audience.", color: "#c878fa", markets: 7701, volume: 1800, traders: 208587,
+  { id: 9, name: "NBA + soccer + boxing", short: "NBA + soccer + boxing", theme: "Sports · NBA Finals series, Serie A, boxing events. Distinct from the NFL+esports cluster (Jaccard 0.18 bond, not dominant overlap). The other sports audience.", color: "#c878fa", markets: 7701, volume: 1800, traders: 208587,
     top: ["Will another team win the Serie A?", "Pacers vs. Thunder (NBA Finals)", "Seahawks vs. Cardinals (NFL)", "Boxing: Canelo Álvarez vs. Terence Crawford", "LoL: T1 vs KT Rolster — Game 3 Winner"] },
-  { id: 0, name: "Hourly SOL/ETH + spreads", short: "Hourly SOL/ETH + spreads", theme: "Crypto · Hourly SOL and ETH Up/Down with NBA spreads mixed in. The 'incoherent crypto-sports hybrid' atom — possibly an artifact of how some traders bridge the two.", color: "#6b7585", markets: 6328, volume: 211, traders: 34615,
+  { id: 0, name: "Hourly SOL/ETH + spreads", short: "Hourly SOL/ETH + spreads", theme: "Crypto · Hourly SOL and ETH Up/Down with NBA spreads mixed in. The 'incoherent crypto-sports hybrid' cluster — possibly an artifact of how some traders bridge the two.", color: "#6b7585", markets: 6328, volume: 211, traders: 34615,
     top: ["Solana Up or Down — January 8, 3PM ET", "Ethereum Up or Down — January 7, 2PM ET", "Pistons vs. Jazz: O/U 242.5", "Solana Up or Down — January 7, 8PM ET", "Spread: Pittsburgh (-9.5)"] },
-  { id: 4, name: "15-min BTC", short: "15-min BTC", theme: "Crypto · 15-min BTC Up/Down product, Jan 2025 wave. Extremely tight cohort — mean degree 3539, the densest atom in the network. Strongly bonded to Atom 5 (Jaccard 0.23).", color: "#5a8df0", markets: 6261, volume: 944, traders: 84262,
+  { id: 4, name: "15-min BTC", short: "15-min BTC", theme: "Crypto · 15-min BTC Up/Down product, Jan 2025 wave. Extremely tight cohort — mean degree 3539, the densest cluster in the network. Strongly bonded to Cluster 5 (Jaccard 0.23).", color: "#5a8df0", markets: 6261, volume: 944, traders: 84262,
     top: ["Bitcoin Up or Down — January 12, 9:45-10:00PM ET", "Bitcoin Up or Down — January 20, 7:15-7:30AM ET", "Bitcoin Up or Down — January 14, 9:30-9:45PM ET", "Bitcoin Up or Down — January 11, 4:15-4:30PM ET", "Bitcoin Up or Down — January 14, 10:00-10:15AM ET"] },
-  { id: 5, name: "Hourly BTC / ETH (recent)", short: "Hourly BTC/ETH (recent)", theme: "Crypto · Hourly BTC and ETH Up/Down, recent months. Bonded to its 15-min sibling (Atom 4, Jaccard 0.23). Same audience using a slightly longer time grain.", color: "#4279e0", markets: 4323, volume: 294, traders: 71900,
+  { id: 5, name: "Hourly BTC / ETH (recent)", short: "Hourly BTC/ETH (recent)", theme: "Crypto · Hourly BTC and ETH Up/Down, recent months. Bonded to its 15-min sibling (Cluster 4, Jaccard 0.23). Same audience using a slightly longer time grain.", color: "#4279e0", markets: 4323, volume: 294, traders: 71900,
     top: ["Bitcoin Up or Down — January 16, 4AM ET", "Bitcoin Up or Down — January 23, 1PM ET", "Ethereum Up or Down — January 14, 1PM ET", "Bitcoin Up or Down — January 21, 12PM ET", "Bitcoin Up or Down — December 15, 10AM ET"] },
-  { id: 3, name: "15-min ETH / SOL", short: "15-min ETH/SOL", theme: "Crypto · 15-min ETH and SOL Up/Down. Sister to Atom 4 (BTC) but different underlyings. The fact that BTC vs ETH/SOL form separate atoms at the same horizon is itself a finding.", color: "#6e9eff", markets: 4378, volume: 197, traders: 30611,
+  { id: 3, name: "15-min ETH / SOL", short: "15-min ETH/SOL", theme: "Crypto · 15-min ETH and SOL Up/Down. Sister to Cluster 4 (BTC) but different underlyings. The fact that BTC vs ETH/SOL form separate clusters at the same horizon is itself a finding.", color: "#6e9eff", markets: 4378, volume: 197, traders: 30611,
     top: ["Ethereum Up or Down — January 16, 3:00-3:15PM ET", "Solana Up or Down — January 17, 12:45-1:00AM ET", "Ethereum Up or Down — January 15, 12:45-1:00PM ET", "Ethereum Up or Down — January 16, 9:45-10:00PM ET", "Ethereum Up or Down — January 17, 2:15-2:30AM ET"] },
-  { id: 13, name: "Mixed · SOL + movies + BTC", short: "Mixed atom", theme: "Mixed — Solana price markets + Tron movie box office + BTC hourly slots. Eclectic remainder. Probably the algorithm picking up a small audience that bridges very different markets.", color: "#6b7585", markets: 4300, volume: 173, traders: 45199,
+  { id: 13, name: "Mixed · SOL + movies + BTC", short: "Mixed", theme: "Mixed — Solana price markets + Tron movie box office + BTC hourly slots. Eclectic remainder. Probably the algorithm picking up a small audience that bridges very different markets.", color: "#6b7585", markets: 4300, volume: 173, traders: 45199,
     top: ["Will the price of Solana be above $170 on October 14?", "Will 'Tron: Ares' Opening Weekend Box Office be between 45m and 50m?", "Bitcoin Up or Down — October 17, 10:00-10:15AM ET", "Bitcoin Up or Down — October 17, 1:30-1:45AM ET"] },
-  { id: 14, name: "2020 election + COVID", short: "2020 election", theme: "Politics · Polymarket's original audience. Trump 2020, Biden inauguration, COVID vaccine timelines, BTC ETF approval, Arbitrum airdrop. Weakly bonded to later election atoms — the 2020 audience didn't substantially carry into 2024.", color: "#b85e3a", markets: 2413, volume: 340, traders: 47175,
+  { id: 14, name: "2020 election + COVID", short: "2020 election", theme: "Politics · Polymarket's original audience. Trump 2020, Biden inauguration, COVID vaccine timelines, BTC ETF approval, Arbitrum airdrop. Weakly bonded to later election clusters — the 2020 audience didn't substantially carry into 2024.", color: "#b85e3a", markets: 2413, volume: 340, traders: 47175,
     top: ["Will Donald Trump be inaugurated for his second term as President of the USA on Inauguration Day, January 20th, 2021?", "Will Trump win the 2020 U.S. presidential election?", "Bitcoin ETF approved by Jan 15?", "Will Joe Biden be inaugurated as President of the USA on January 20th, 2021?", "Will 100 million people have received a dose of an approved COVID-19 vaccine in the US by April 1, 2021?", "Arbitrum airdrop by March 31st?"] },
-  { id: 12, name: "Niche · weather + niche elections", short: "Niche / noise", theme: "Niche · Romanian election, F1, golf, NYC weather. Eclectic small-scale atom. Probably the algorithm catching a small audience of niche-events generalists.", color: "#3a4350", markets: 2291, volume: 37, traders: 58437,
+  { id: 12, name: "Niche · weather + niche elections", short: "Niche events", theme: "Niche · Romanian election, F1, golf, NYC weather. Eclectic small-scale cluster. Probably the algorithm catching a small audience of niche-events generalists.", color: "#3a4350", markets: 2291, volume: 37, traders: 58437,
     top: ["Will Călin Georgescu win the Romanian Presidential election by 10% or more?", "Will Justin Rose win The 2025 Masters?", "Will Liam Lawson win the 2025 Japanese Grand Prix?", "Will the highest temperature in NYC be between 35-36°F on February 14?", "OG Shoots vs. Easy (esports)"] },
-  { id: 11, name: "2025 politics (mixed)", short: "2025 politics", theme: "Politics · Mid-2025 events. Sliwa NYC, Spanberger Virginia, Chile presidential, Fed rates 2025, Game of the Year. Smaller and more recent than the 2024 atoms.", color: "#f4b860", markets: 1638, volume: 86, traders: 96221,
-    top: ["Will Curtis Sliwa drop out?", "Will 3 Fed rate cuts happen in 2025?", "Ukraine agrees to US-approved peace plan by Thursday?", "Will 2 Fed rate cuts happen in 2025?", "Will Abigail Spanberger win the Virginia Governor Election in 2025", "Will Evelyn Matthei win the Chilean presidential election?", "Will Clair Obscur: Expedition 33 win Game of the Year at the 2025 Game Awards?"] },
-  { id: 16, name: "Eurovision 2026", short: "Eurovision 2026", theme: "Noise · 16 Eurovision markets traded by a tiny pocket of 600 users. Nearly isolated atom — almost no bonds to the rest of the network.", color: "#3a4350", markets: 16, volume: 0.188, traders: 606,
+  { id: 11, name: "2025 politics", short: "2025 politics", theme: "Politics · Mid-2025 events. Sliwa NYC, Spanberger Virginia, Chile presidential, Fed rates 2025, Game of the Year. Smaller and more recent than the 2024 clusters.", color: "#f4b860", markets: 1638, volume: 86, traders: 96221,
+    top: ["Will Curtis Sliwa drop out?", "Will 3 Fed rate cuts happen in 2025?", "Ukraine agrees to US-approved peace plan by Thursday?", "Will 2 Fed rate cuts happen in 2025?", "Will Abigail Spanberger win the Virginia Governor Election in 2025", "Will Evelyn Matthei win the Chilean presidential election?"] },
+  { id: 16, name: "Eurovision 2026", short: "Eurovision 2026", theme: "Noise · 16 Eurovision markets traded by a tiny pocket of 600 users. Nearly isolated cluster — almost no bonds to the rest of the network.", color: "#3a4350", markets: 16, volume: 0.188, traders: 606,
     top: ["Will Israel win Eurovision 2026?", "Will Sweden win Eurovision 2026?", "Will Switzerland win Eurovision 2026?", "Will Albania win Eurovision 2026?", "Will Finland win Eurovision 2026?"] },
-  { id: 15, name: "Spanish influencer boxing", short: "Spanish influencer boxing", theme: "Noise · A tiny atom of 250 users trading 7 Spanish-language influencer boxing markets. Isolated from the rest of the network.", color: "#3a4350", markets: 7, volume: 0.079, traders: 250,
+  { id: 15, name: "Spanish influencer boxing", short: "Spanish boxing", theme: "Noise · A tiny cluster of 250 users trading 7 Spanish-language influencer boxing markets. Isolated from the rest of the network.", color: "#3a4350", markets: 7, volume: 0.079, traders: 250,
     top: ["Boxing: TheGrefg vs Westcol", "Boxing: Abby vs. RoRo", "Boxing: Viruzz vs Tomás Mazza", "Boxing: Perxitaa vs. Gaspi", "Boxing: Andoni vs. Carlos Belcast"] },
-  { id: 17, name: "NFL Browns draft", short: "Browns draft", theme: "Noise · Just 2 markets and 97 users — a Browns draft micro-cluster the algorithm pulled out. Genuinely an isolated atom.", color: "#3a4350", markets: 2, volume: 0.007, traders: 97,
+  { id: 17, name: "NFL Browns draft", short: "Browns draft", theme: "Noise · Just 2 markets and 97 users — a Browns draft micro-cluster the algorithm pulled out. Genuinely an isolated cluster.", color: "#3a4350", markets: 2, volume: 0.007, traders: 97,
     top: ["Will the Browns draft Will Johnson?", "Will the Browns draft Tetairoa McMillan?"] },
 ];
 
-// Atomic bonds — top by shared traders, threshold ≥ 10K shared
+// Bonds between clusters (top 30 by shared traders)
 const bonds = [
   { a: 1, b: 6, shared: 569385, jaccard: 0.323 },
   { a: 1, b: 10, shared: 341051, jaccard: 0.198 },
@@ -732,6 +554,18 @@ const bonds = [
   { a: 5, b: 7, shared: 19878, jaccard: 0.150 },
 ];
 
+// Sub-communities inside Cluster 1 (the 2024 mega-cluster)
+const megaSubs = [
+  { id: 'm-2', name: "Headline whales", short: "Headline whales", theme: "$10K+ wallets betting only on the front page — Trump 2024 ($1.64B alone), Harris 2024 ($887M), inauguration, NBA Finals, UCL. Few markets, massive volume each.", color: "#f0b860", markets: 1078, volume: 8900, traders: 2801,
+    top: ["Will Donald Trump win the 2024 US Presidential Election? ($1.64B)", "Will Kamala Harris win the 2024 US Presidential Election? ($887M)", "Will Donald Trump be inaugurated? ($478M)", "Will Zohran Mamdani win the 2025 NYC mayoral election?", "Kamala Harris wins the popular vote?", "Will Inter Milan win the UEFA Champions League?"] },
+  { id: 'm-1', name: "News-cycle generalists", short: "News-cycle generalists", theme: "Mid-frequency bettors active on whatever's trending. Zelenskyy's suit, TikTok ban, Epstein files, Russia/Ukraine, Israel/Iran, Polymarket-US launch.", color: "#e89244", markets: 12017, volume: 5400, traders: 2964,
+    top: ["Will Zelenskyy wear a suit before July?", "Xi Jinping out in 2025?", "TikTok banned in the US before May 2025?", "Will Trump release the Epstein files by December 19?", "Russia x Ukraine ceasefire in 2025?", "Will Eleven die in 'Stranger Things: Season 5'?"] },
+  { id: 'm-4', name: "International politics", short: "International politics", theme: "A specialist cohort that bets on non-US elections — South Korea, Romania, Poland, Honduras presidentials. Smaller in volume but distinct in behavior.", color: "#d97632", markets: 4649, volume: 1600, traders: 4649,
+    top: ["Will Lee Jae-myung be elected the next president of South Korea?", "Will Nicușor Dan win the Romanian presidential election?", "Will Kim Moon-soo be elected the next president of South Korea?", "Will Rafał Trzaskowski be the next President of Poland?", "Will Karol Nawrocki be the next President of Poland?"] },
+  { id: 'm-0', name: "Niche tourists", short: "Niche tourists", theme: "The 'anything goes' tail. d4vd Google searches, individual Fed chair nominations, NJ governor, Vietnam CCP general secretary, Avatar box office.", color: "#b85a28", markets: 6948, volume: 1100, traders: 6948,
+    top: ["Will d4vd be the #1 searched person on Google this year?", "Will OpenAI release a new frontier model on December 11?", "Will Trump nominate Jerome Powell as the next Fed chair?", "Will Jake Paul vs. Anthony Joshua have no official winner?", "Will Salvador Nasralla win the 2025 Honduras presidential election?"] },
+];
+
 const clusterById = Object.fromEntries(clusters.map(c => [c.id, c]));
 
 const formatVol = v => {
@@ -745,46 +579,44 @@ const formatTraders = n => {
   return n.toLocaleString();
 };
 
-// ---- Render atomic network ----
-const svg = d3.select("#atom-svg");
+// ---- Generic bubble-network renderer ----
+function renderNetwork(svgEl, nodes, links, opts = {}) {
+  const w = svgEl.clientWidth;
+  const h = opts.height || svgEl.clientHeight || 440;
+  const svg = d3.select(svgEl);
+  svg.attr("viewBox", `0 0 ${w} ${h}`).html("");
 
-function renderAtoms() {
-  const w = document.getElementById("atom-svg").clientWidth;
-  const h = 680;
-  svg.attr("viewBox", `0 0 ${w} ${h}`);
-  svg.selectAll("*").remove();
+  const maxVol = d3.max(nodes, d => d.volume);
+  const minR = opts.minR || 16;
+  const maxR = opts.maxR || 96;
+  const rScale = d3.scaleSqrt().domain([0, maxVol]).range([minR, maxR]);
+  const sized = nodes.map(n => ({...n, r: rScale(n.volume)}));
+  const nodeMap = Object.fromEntries(sized.map(n => [n.id, n]));
+  const linkObjs = (links || []).map(l => ({source: nodeMap[l.a], target: nodeMap[l.b], shared: l.shared, jaccard: l.jaccard})).filter(l => l.source && l.target);
 
-  const maxVol = d3.max(clusters, d => d.volume);
-  const rScale = d3.scaleSqrt().domain([0, maxVol]).range([16, 96]);
+  const maxShared = d3.max(linkObjs, d => d.shared) || 1;
+  const linkStroke = d3.scaleSqrt().domain([0, maxShared]).range([0.6, opts.maxBondWidth || 5]);
+  const linkOpacity = d3.scaleLinear().domain([0, 0.33]).range([0.2, 0.9]).clamp(true);
 
-  const nodes = clusters.map(c => ({...c, r: rScale(c.volume)}));
-  const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
-
-  const links = bonds.map(b => ({source: nodeById[b.a], target: nodeById[b.b], shared: b.shared, jaccard: b.jaccard})).filter(l => l.source && l.target);
-
-  const maxShared = d3.max(links, d => d.shared);
-  const linkStroke = d3.scaleSqrt().domain([0, maxShared]).range([0.5, 4.5]);
-  const linkOpacity = d3.scaleLinear().domain([0, 0.33]).range([0.18, 0.85]);
-
-  const sim = d3.forceSimulation(nodes)
+  const sim = d3.forceSimulation(sized)
     .force("center", d3.forceCenter(w/2, h/2))
     .force("collide", d3.forceCollide(d => d.r + 4).strength(0.95))
-    .force("charge", d3.forceManyBody().strength(-50))
-    .force("link", d3.forceLink(links)
+    .force("charge", d3.forceManyBody().strength(opts.charge || -60))
+    .force("link", d3.forceLink(linkObjs)
       .id(d => d.id)
-      .distance(d => 120 + (1 - Math.min(d.jaccard, 0.35)) * 220)
+      .distance(d => (opts.distBase || 140) + (1 - Math.min(d.jaccard, 0.35)) * (opts.distRange || 220))
       .strength(d => 0.05 + d.jaccard * 1.2))
     .stop();
-  for (let i = 0; i < 400; i++) sim.tick();
+  const ticks = opts.ticks || 400;
+  for (let i = 0; i < ticks; i++) sim.tick();
 
-  // Keep within viewport
-  nodes.forEach(n => {
+  sized.forEach(n => {
     n.x = Math.max(n.r + 8, Math.min(w - n.r - 8, n.x));
     n.y = Math.max(n.r + 8, Math.min(h - n.r - 8, n.y));
   });
 
-  const linkSel = svg.selectAll("line.bond")
-    .data(links).enter().append("line")
+  const bondSel = svg.selectAll("line.bond")
+    .data(linkObjs).enter().append("line")
     .attr("class", "bond")
     .attr("stroke", "#6e7585")
     .attr("stroke-width", d => linkStroke(d.shared))
@@ -792,17 +624,28 @@ function renderAtoms() {
     .attr("x1", d => d.source.x).attr("y1", d => d.source.y)
     .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
 
+  // Bond labels (only on spotlight viz where there are few enough to read)
+  if (opts.showBondLabels) {
+    svg.selectAll("text.bond-label")
+      .data(linkObjs).enter().append("text")
+      .attr("class", "bond-label")
+      .attr("x", d => (d.source.x + d.target.x)/2)
+      .attr("y", d => (d.source.y + d.target.y)/2 - 4)
+      .text(d => formatTraders(d.shared) + " · J " + d.jaccard.toFixed(2));
+  }
+
   const nodeSel = svg.selectAll("g.atom")
-    .data(nodes).enter().append("g")
+    .data(sized).enter().append("g")
     .attr("class", "atom")
     .attr("transform", d => `translate(${d.x}, ${d.y})`)
-    .on("click", (e, d) => openPanel(d))
+    .on("click", (e, d) => opts.onClick ? opts.onClick(d) : openPanel(d))
     .call(d3.drag()
       .on("start", (e, d) => { d.fx = d.x; d.fy = d.y; })
       .on("drag", (e, d) => {
         d.fx = e.x; d.fy = e.y; d.x = e.x; d.y = e.y;
-        d3.select(e.sourceEvent.target.closest("g.atom")).attr("transform", `translate(${d.x}, ${d.y})`);
-        linkSel
+        const g = d3.select(e.sourceEvent.target.closest("g.atom"));
+        g.attr("transform", `translate(${d.x}, ${d.y})`);
+        bondSel
           .attr("x1", l => l.source.x).attr("y1", l => l.source.y)
           .attr("x2", l => l.target.x).attr("y2", l => l.target.y);
       }));
@@ -829,24 +672,69 @@ function renderAtoms() {
     .text(d => formatVol(d.volume));
 }
 
-renderAtoms();
-window.addEventListener("resize", renderAtoms);
+// ---- Render all viz ----
+function renderAll() {
+  // Hero — all 18 clusters + 30 bonds
+  renderNetwork(
+    document.getElementById("hero-svg"),
+    clusters,
+    bonds,
+    { height: 680, charge: -50, distBase: 120, distRange: 220, ticks: 400 }
+  );
+
+  // Spotlight 1: Crypto time-horizon (clusters 3, 4, 5, 7, 10)
+  const cryptoIds = new Set([3, 4, 5, 7, 10]);
+  renderNetwork(
+    document.getElementById("spot-crypto-svg"),
+    clusters.filter(c => cryptoIds.has(c.id)),
+    bonds.filter(b => cryptoIds.has(b.a) && cryptoIds.has(b.b)),
+    { height: 440, minR: 30, maxR: 90, charge: -200, distBase: 160, distRange: 140, ticks: 300, showBondLabels: true, maxBondWidth: 6 }
+  );
+
+  // Spotlight 2: Election eras (clusters 14, 6, 1)
+  const electionIds = new Set([14, 6, 1]);
+  renderNetwork(
+    document.getElementById("spot-election-svg"),
+    clusters.filter(c => electionIds.has(c.id)),
+    bonds.filter(b => electionIds.has(b.a) && electionIds.has(b.b)),
+    { height: 440, minR: 38, maxR: 120, charge: -250, distBase: 200, distRange: 160, ticks: 300, showBondLabels: true, maxBondWidth: 7 }
+  );
+
+  // Spotlight 3: Inside Cluster 1 — the 4 sub-communities (megaSubs).
+  // No inter-bond data computed for sub-communities, so just bubbles.
+  renderNetwork(
+    document.getElementById("spot-mega-svg"),
+    megaSubs,
+    [],
+    { height: 440, minR: 50, maxR: 120, charge: -180, distBase: 200, distRange: 140, ticks: 300, onClick: openSubPanel }
+  );
+
+  // Spotlight 4: Sports (clusters 2, 9)
+  const sportsIds = new Set([2, 9]);
+  renderNetwork(
+    document.getElementById("spot-sports-svg"),
+    clusters.filter(c => sportsIds.has(c.id)),
+    bonds.filter(b => sportsIds.has(b.a) && sportsIds.has(b.b)),
+    { height: 440, minR: 50, maxR: 130, charge: -300, distBase: 220, distRange: 100, ticks: 300, showBondLabels: true, maxBondWidth: 7 }
+  );
+}
+
+renderAll();
+window.addEventListener("resize", renderAll);
 
 // ---- Drill-down panel ----
 const panel = document.getElementById("panel");
 const backdrop = document.getElementById("backdrop");
 
 function openPanel(cluster) {
-  document.getElementById("p-eyebrow").textContent = `Atom ${cluster.id}`;
+  document.getElementById("p-eyebrow").textContent = `Cluster ${cluster.id}`;
   document.getElementById("p-title").textContent = cluster.name;
   document.getElementById("p-vol").textContent = formatVol(cluster.volume);
   document.getElementById("p-markets").textContent = cluster.markets.toLocaleString();
   document.getElementById("p-traders").textContent = formatTraders(cluster.traders);
 
-  const ml = document.getElementById("p-markets-list");
-  ml.innerHTML = cluster.top.map(t => `<li>${t}</li>`).join("");
+  document.getElementById("p-markets-list").innerHTML = cluster.top.map(t => `<li>${t}</li>`).join("");
 
-  // Bonds involving this cluster
   const cBonds = bonds.filter(b => b.a === cluster.id || b.b === cluster.id)
     .map(b => {
       const otherId = b.a === cluster.id ? b.b : b.a;
@@ -854,15 +742,16 @@ function openPanel(cluster) {
     })
     .sort((a, b) => b.shared - a.shared);
 
+  document.getElementById("p-bonds-header").style.display = "";
   const bl = document.getElementById("p-bonds");
   if (cBonds.length === 0) {
-    bl.innerHTML = `<div style="color: var(--text-dimmer); font-size: 12px; padding: 8px 0;">No significant bonds — this atom is mostly isolated.</div>`;
+    bl.innerHTML = `<div style="color: var(--text-dimmer); font-size: 12px; padding: 8px 0;">No significant bonds — this cluster is isolated from the rest of the network.</div>`;
   } else {
     bl.innerHTML = cBonds.slice(0, 8).map(b => `
       <div class="bond-row">
         <div class="bond-target" onclick="openPanel(clusterById[${b.other.id}])">
           <span class="bond-dot" style="background:${b.other.color}"></span>
-          <span>Atom ${b.other.id} · ${b.other.short}</span>
+          <span>Cluster ${b.other.id} · ${b.other.short}</span>
         </div>
         <div class="bond-strength">${formatTraders(b.shared)} · J ${b.jaccard.toFixed(2)}</div>
       </div>
@@ -871,6 +760,20 @@ function openPanel(cluster) {
 
   document.getElementById("p-theme").textContent = cluster.theme;
 
+  panel.classList.add("show");
+  backdrop.classList.add("show");
+}
+
+function openSubPanel(sub) {
+  document.getElementById("p-eyebrow").textContent = `Sub-community of Cluster 1`;
+  document.getElementById("p-title").textContent = sub.name;
+  document.getElementById("p-vol").textContent = formatVol(sub.volume);
+  document.getElementById("p-markets").textContent = sub.markets.toLocaleString();
+  document.getElementById("p-traders").textContent = formatTraders(sub.traders);
+  document.getElementById("p-markets-list").innerHTML = sub.top.map(t => `<li>${t}</li>`).join("");
+  document.getElementById("p-bonds-header").style.display = "none";
+  document.getElementById("p-bonds").innerHTML = "";
+  document.getElementById("p-theme").textContent = sub.theme;
   panel.classList.add("show");
   backdrop.classList.add("show");
 }
@@ -884,7 +787,6 @@ document.getElementById("panel-close").addEventListener("click", closePanel);
 backdrop.addEventListener("click", closePanel);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
 
-// Expose for the bond-row inline onclick handlers
 window.openPanel = openPanel;
 window.clusterById = clusterById;
 </script>
