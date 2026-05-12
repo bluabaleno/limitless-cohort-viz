@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polymarket Trader Cohorts — Behavioral Clustering</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0d12;
+    --bg-elev: #11151c;
+    --bg-elev-2: #1a1f29;
+    --border: #1e2530;
+    --border-light: #2a3340;
+    --text: #e5e8ee;
+    --text-dim: #8a93a3;
+    --text-dimmer: #5a6373;
+    --accent: #00d09c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum'; }
+
+  .container { max-width: 1240px; margin: 0 auto; padding: 48px 32px; }
+  header.hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    max-width: 880px;
+  }
+  .lede {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 760px;
+    line-height: 1.55;
+  }
+  .stats-strip {
+    display: flex; gap: 36px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .stat .num { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--text); }
+  .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dimmer); margin-top: 2px; }
+
+  section { margin-bottom: 56px; }
+  h2 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-bottom: 6px;
+  }
+  .section-sub {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 24px;
+    max-width: 720px;
+  }
+
+  /* Bubble viz */
+  .bubble-wrap {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+  }
+  #bubble-svg { width: 100%; height: 620px; display: block; }
+  .bubble-label {
+    fill: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  .bubble-vol {
+    fill: rgba(255,255,255,0.65);
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  .legend {
+    display: flex; gap: 18px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(10, 13, 18, 0.96);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    max-width: 280px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .t-title { font-weight: 600; margin-bottom: 4px; }
+  .tooltip .t-stats { color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 8px; }
+  .tooltip .t-markets li { color: var(--text); font-size: 11px; padding: 2px 0; list-style: none; }
+  .tooltip .t-markets li:before { content: "·"; color: var(--text-dimmer); margin-right: 6px; }
+
+  /* Time horizon spotlight */
+  .horizon-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .horizon-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    border-top: 3px solid;
+  }
+  .horizon-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 4px; }
+  .horizon-card .name { font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+  .horizon-card .vol { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--text); }
+  .horizon-card .sub { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+  .horizon-card ul { list-style: none; padding-left: 0; }
+  .horizon-card li { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
+  .horizon-axis {
+    display: flex; justify-content: space-between;
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Election cycles */
+  .election-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .election-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .election-card .era { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 6px; }
+  .election-card .title { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+  .election-card .figures { display: flex; gap: 18px; margin-bottom: 14px; }
+  .election-card .figures .v { font-family: 'JetBrains Mono', monospace; font-size: 16px; }
+  .election-card .figures .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dimmer); }
+  .election-card ul { list-style: none; padding: 0; border-top: 1px solid var(--border); padding-top: 12px; }
+  .election-card li { font-size: 12px; padding: 3px 0; color: var(--text-dim); }
+  .election-card li:before { content: "·"; color: var(--text-dimmer); margin-right: 6px; }
+
+  /* Gradient (mega-cluster) */
+  .gradient-wrap {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .gradient-bar {
+    height: 10px;
+    background: linear-gradient(to right, #f0b860, #e89244, #d97632, #b85a28);
+    border-radius: 5px;
+    margin: 18px 0 14px;
+  }
+  .gradient-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 24px; }
+  .gradient-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .gradient-card {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .gradient-card .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  .gradient-card .vol { font-family: 'JetBrains Mono', monospace; font-size: 17px; }
+  .gradient-card .stat-row { font-size: 11px; color: var(--text-dim); margin-bottom: 10px; }
+  .gradient-card ul { list-style: none; padding: 0; }
+  .gradient-card li { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
+
+  /* Sports row */
+  .sport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .sport-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--purple, #a78bfa);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .sport-card .name { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+  .sport-card .stats { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; font-family: 'JetBrains Mono', monospace; }
+  .sport-card ul { list-style: none; padding: 0; }
+  .sport-card li { font-size: 12px; color: var(--text-dim); padding: 2px 0; }
+
+  /* Method card */
+  .method-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+  .method-card, .stat-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .method-card p { color: var(--text-dim); margin-bottom: 10px; font-size: 13px; }
+  .stat-card .num { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600; }
+  .stat-card .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .stat-card .row:last-child { border-bottom: 0; }
+  .stat-card .row .l { color: var(--text-dim); }
+  .stat-card .row .v { font-family: 'JetBrains Mono', monospace; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 56px;
+    color: var(--text-dimmer);
+    font-size: 12px;
+    text-align: center;
+  }
+  footer a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dotted var(--text-dimmer); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="hero">
+    <div class="eyebrow">Behavioral cohort analysis · Polymarket · May 2026</div>
+    <h1>How prediction-market traders actually cluster — when you ignore the platform's tags.</h1>
+    <p class="lede">
+      We ran behavioral community detection on 59.2M trader–market edges across Polymarket's full history (Oct 2020 – Jan 2026, 1.98M wallets, 300K markets). Louvain clustering on the bipartite projection surfaces 18 cohorts — and the patterns don't match Polymarket's category tags. Time horizon splits crypto traders into five separate audiences. Election eras don't share users. "Sports" is two cohorts. And there's no fundamentals-trader cohort at all.
+    </p>
+    <div class="stats-strip">
+      <div class="stat"><div class="num">1.98M</div><div class="label">Wallets</div></div>
+      <div class="stat"><div class="num">300,201</div><div class="label">Markets</div></div>
+      <div class="stat"><div class="num">59.2M</div><div class="label">Trader–market edges</div></div>
+      <div class="stat"><div class="num">18</div><div class="label">Cohorts found</div></div>
+      <div class="stat"><div class="num">0.78</div><div class="label">Modularity (Louvain)</div></div>
+    </div>
+  </header>
+
+  <!-- HERO BUBBLE VIZ -->
+  <section>
+    <h2>The 18 cohorts · sized by total volume</h2>
+    <p class="section-sub">Each bubble is a behavioral cohort. Color = theme. Size = total trade volume. Hover for the top markets in each. The clustering algorithm has no knowledge of Polymarket's tags — these groupings come purely from who-trades-with-whom.</p>
+    <div class="bubble-wrap">
+      <svg id="bubble-svg"></svg>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#e8a25a"></span>2024 election mega</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#d97b4a"></span>2024 Dem primary / Biden</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#b85e3a"></span>2020 election</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f4b860"></span>2025 politics</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#a78bfa"></span>NFL + esports</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#c878fa"></span>NBA + soccer</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#1a4fc0"></span>Crypto · daily / price target</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#2a64d0"></span>Crypto · hourly</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#6e9eff"></span>Crypto · 15-min</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#6b7585"></span>Mixed / artifact</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3a4350"></span>Noise / niche</div>
+      </div>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </section>
+
+  <!-- TIME HORIZON SPOTLIGHT -->
+  <section>
+    <h2>Spotlight 1 · Time horizon splits crypto traders into five audiences</h2>
+    <p class="section-sub">Five distinct cohorts trade the same underlyings (BTC / ETH / SOL). They don't (meaningfully) overlap. Someone betting BTC at 15-min intervals is a different person from someone betting BTC weekly price targets. Not subsets — different audiences.</p>
+    <div class="horizon-grid">
+      <div class="horizon-card" style="border-top-color:#6e9eff">
+        <div class="label">Cluster 3</div>
+        <div class="name">15-min ETH / SOL</div>
+        <div class="vol">$197M</div>
+        <div class="sub">4,378 markets</div>
+        <ul>
+          <li>· ETH Up/Down (15-min slots)</li>
+          <li>· SOL Up/Down (15-min slots)</li>
+          <li>· Highest mean degree of any cluster</li>
+        </ul>
+      </div>
+      <div class="horizon-card" style="border-top-color:#5a8df0">
+        <div class="label">Cluster 4</div>
+        <div class="name">15-min BTC</div>
+        <div class="vol">$944M</div>
+        <div class="sub">6,261 markets</div>
+        <ul>
+          <li>· BTC Up/Down (15-min)</li>
+          <li>· Jan 2025 wave</li>
+          <li>· Very tight cohort</li>
+        </ul>
+      </div>
+      <div class="horizon-card" style="border-top-color:#4279e0">
+        <div class="label">Cluster 5</div>
+        <div class="name">Hourly BTC / ETH</div>
+        <div class="vol">$294M</div>
+        <div class="sub">4,323 markets</div>
+        <ul>
+          <li>· BTC Up/Down (1hr)</li>
+          <li>· ETH Up/Down (1hr)</li>
+          <li>· Recent months</li>
+        </ul>
+      </div>
+      <div class="horizon-card" style="border-top-color:#2a64d0">
+        <div class="label">Cluster 7</div>
+        <div class="name">Hourly BTC (older)</div>
+        <div class="vol">$547M</div>
+        <div class="sub">8,395 markets</div>
+        <ul>
+          <li>· BTC Up/Down (1hr)</li>
+          <li>· Oct / Jul period</li>
+          <li>· Temporally separate cohort</li>
+        </ul>
+      </div>
+      <div class="horizon-card" style="border-top-color:#1a4fc0">
+        <div class="label">Cluster 10</div>
+        <div class="name">Daily / price-target</div>
+        <div class="vol">$2.0B</div>
+        <div class="sub">15,086 markets</div>
+        <ul>
+          <li>· BTC reach $115K in June</li>
+          <li>· SOL above $280 on Oct 10</li>
+          <li>· Daily / weekly horizon</li>
+        </ul>
+      </div>
+    </div>
+    <div class="horizon-axis">
+      <span>← short horizon · scalper</span>
+      <span>longer horizon · positional →</span>
+    </div>
+  </section>
+
+  <!-- ELECTION CYCLES -->
+  <section>
+    <h2>Spotlight 2 · Election eras are separate audiences</h2>
+    <p class="section-sub">2020 voters ≠ 2024 primary voters ≠ 2024 general voters. Three distinct cohorts, not subsets of one another. Each election cycle creates a fresh audience that doesn't carry over.</p>
+    <div class="election-grid">
+      <div class="election-card">
+        <div class="era">Cluster 14</div>
+        <div class="title">2020 election + COVID era</div>
+        <div class="figures">
+          <div><div class="v">$340M</div><div class="l">Volume</div></div>
+          <div><div class="v">2,413</div><div class="l">Markets</div></div>
+        </div>
+        <ul>
+          <li>Trump 2020 US Presidential</li>
+          <li>Biden 2020 inauguration</li>
+          <li>BTC ETF approval Jan '21</li>
+          <li>COVID vaccine 100M doses</li>
+          <li>Arbitrum airdrop</li>
+        </ul>
+      </div>
+      <div class="election-card">
+        <div class="era">Cluster 6</div>
+        <div class="title">2024 Dem primary / Biden cycle</div>
+        <div class="figures">
+          <div><div class="v">$4.3B</div><div class="l">Volume</div></div>
+          <div><div class="v">13,258</div><div class="l">Markets</div></div>
+        </div>
+        <ul>
+          <li>Will Biden finish his term?</li>
+          <li>Harris 2024 Dem nomination</li>
+          <li>Tyson vs Paul</li>
+          <li>Trump launch a coin</li>
+          <li>Fed cuts 6+ times in 2024</li>
+        </ul>
+      </div>
+      <div class="election-card">
+        <div class="era">Cluster 1 · mega</div>
+        <div class="title">2024 US Presidential cycle</div>
+        <div class="figures">
+          <div><div class="v">$17.0B</div><div class="l">Volume</div></div>
+          <div><div class="v">24,956</div><div class="l">Markets</div></div>
+        </div>
+        <ul>
+          <li>Trump 2024 — $1.64B single market</li>
+          <li>Harris 2024 — $887M</li>
+          <li>Trump inauguration — $478M</li>
+          <li>Mamdani NYC mayoral</li>
+          <li>Fed rate decisions (live with politics)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2024 MEGA-COHORT GRADIENT -->
+  <section>
+    <h2>Spotlight 3 · The 2024 election mega-cluster is a gradient, not tribes</h2>
+    <p class="section-sub">Recursive Louvain on cluster 1 surfaces 4 sub-cohorts (modularity 0.226 — weak separation). It's not separate audiences — it's the same population at different attention budgets.</p>
+    <div class="gradient-wrap">
+      <div class="gradient-bar"></div>
+      <div class="gradient-labels">
+        <span>← Few markets, mega volume</span>
+        <span>Many markets, small per-user →</span>
+      </div>
+      <div class="gradient-cards">
+        <div class="gradient-card" style="border-left: 3px solid #f0b860">
+          <div class="name">Headline whales</div>
+          <div class="vol">$8.9B</div>
+          <div class="stat-row">1,078 markets · 2,801 users</div>
+          <ul>
+            <li>Trump 2024 — $1.64B</li>
+            <li>Harris 2024 — $887M</li>
+            <li>Trump inauguration</li>
+            <li>Harris popular vote</li>
+            <li>UCL / NBA Finals</li>
+          </ul>
+        </div>
+        <div class="gradient-card" style="border-left: 3px solid #e89244">
+          <div class="name">News-cycle generalists</div>
+          <div class="vol">$5.4B</div>
+          <div class="stat-row">12,017 markets · 2,964 users</div>
+          <ul>
+            <li>Zelenskyy wear a suit?</li>
+            <li>TikTok banned in US?</li>
+            <li>Trump release Epstein files</li>
+            <li>Russia-Ukraine ceasefire</li>
+            <li>Israel-Iran ceasefire</li>
+          </ul>
+        </div>
+        <div class="gradient-card" style="border-left: 3px solid #d97632">
+          <div class="name">International politics</div>
+          <div class="vol">$1.6B</div>
+          <div class="stat-row">4,649 markets · 4,649 users</div>
+          <ul>
+            <li>South Korea presidential</li>
+            <li>Romania presidential</li>
+            <li>Poland presidential</li>
+            <li>Honduras presidential</li>
+            <li>Stanley Cup</li>
+          </ul>
+        </div>
+        <div class="gradient-card" style="border-left: 3px solid #b85a28">
+          <div class="name">Niche tourists</div>
+          <div class="vol">$1.1B</div>
+          <div class="stat-row">6,948 markets · 6,948 users</div>
+          <ul>
+            <li>d4vd most-searched Google</li>
+            <li>OpenAI new model Dec 11</li>
+            <li>Trump nominate Powell</li>
+            <li>NJ governor 2025</li>
+            <li>Vietnam CCP general secretary</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPORTS SPOTLIGHT -->
+  <section>
+    <h2>Spotlight 4 · "Sports" is two distinct cohorts</h2>
+    <p class="section-sub">Polymarket bundles all sports under one tag — but the wallet base is split. NFL + League of Legends bettors don't (much) overlap with NBA + soccer + boxing bettors. Different audiences hidden under one platform category.</p>
+    <div class="sport-grid">
+      <div class="sport-card" style="border-top-color: #a78bfa">
+        <div class="name">Cluster 2 · NFL + esports</div>
+        <div class="stats">$5.9B · 22,346 markets</div>
+        <ul>
+          <li>· NFL spreads (Rams vs Bears, Bills vs Broncos, etc.)</li>
+          <li>· LoL match outcomes (T1 vs KT Rolster, etc.)</li>
+          <li>· Boxing event markets</li>
+        </ul>
+      </div>
+      <div class="sport-card" style="border-top-color: #c878fa">
+        <div class="name">Cluster 9 · NBA + soccer + boxing</div>
+        <div class="stats">$1.8B · 7,701 markets</div>
+        <ul>
+          <li>· NBA Finals series (Pacers vs Thunder, etc.)</li>
+          <li>· Serie A title race</li>
+          <li>· Canelo vs Crawford boxing</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHODOLOGY -->
+  <section>
+    <h2>Methodology</h2>
+    <p class="section-sub">Pipeline + key decisions that made the analysis honest.</p>
+    <div class="method-grid">
+      <div class="method-card">
+        <p><strong style="color:var(--text)">Dataset:</strong> Jon-Becker/prediction-market-analysis — full Polymarket trade history scraped from Polygon (Oct 2020 – Jan 2026). 59.2M trader–market edges after extracting OrderFilled and FPMM events.</p>
+        <p><strong style="color:var(--text)">Filtering:</strong> Excluded 2 protocol contracts (CTF Exchange + NegRisk CTF Exchange) that appear as maker/taker in events but aren't real traders. Dropped 201 dust spammers (mean trade &lt; $1, traded 1000+ markets) and 5,342 ultra-generalists (1000+ markets, blurs community boundaries). Singletons (1 market only) contribute no pairs.</p>
+        <p><strong style="color:var(--text)">Projection:</strong> Trader-market bipartite → market-market via Jaccard on shared traders (threshold ≥ 5 shared traders, Jaccard ≥ 0.01). Unweighted, not volume-weighted — answers "where do traders co-locate" not "where does capital co-flow."</p>
+        <p><strong style="color:var(--text)">Clustering:</strong> Louvain via igraph, weighted by Jaccard. Modularity 0.7838 at the global level — &gt; 0.6 is generally considered well-separated.</p>
+      </div>
+      <div class="stat-card">
+        <div class="row"><span class="l">Wallets analyzed</span><span class="v">1,701,049</span></div>
+        <div class="row"><span class="l">Markets in projection</span><span class="v">133,217</span></div>
+        <div class="row"><span class="l">Edges in market graph</span><span class="v">61,000,000</span></div>
+        <div class="row"><span class="l">Mean degree</span><span class="v">916</span></div>
+        <div class="row"><span class="l">Modularity</span><span class="v">0.7838</span></div>
+        <div class="row"><span class="l">Clusters found</span><span class="v">18</span></div>
+        <div class="row"><span class="l">Pipeline runtime</span><span class="v">~50 min</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Behavioral cohort analysis · Polymarket trader–market graph · methodology + code reproducible from <a href="https://github.com/Jon-Becker/prediction-market-analysis">public dataset</a> · May 2026
+  </footer>
+
+</div>
+
+<script>
+// Cluster data — derived from the analysis output
+const clusters = [
+  { id: 1, name: "2024 US Presidential", theme: "election-2024", color: "#e8a25a", markets: 24956, volume: 17000, traders: 20509174,
+    top: ["Will Donald Trump win the 2024 US Presidential Election?", "Will Kamala Harris win the 2024 US Presidential Election?", "Will Donald Trump be inaugurated?", "Will Zohran Mamdani win the 2025 NYC mayoral election?", "Will Zelenskyy wear a suit before July?", "Kamala Harris wins the popular vote?", "Fed decreases interest rates by 50+ bps after December 2025 meeting?"] },
+  { id: 2, name: "NFL + esports", theme: "sports-a", color: "#a78bfa", markets: 22346, volume: 5900, traders: 6435684,
+    top: ["LoL: T1 vs KT Rolster (BO5)", "Rams vs. Bears", "Bills vs. Broncos", "LoL: Anyone's Legend vs T1", "Cowboys vs. Lions"] },
+  { id: 10, name: "Crypto · daily / price-target", theme: "crypto-daily", color: "#1a4fc0", markets: 15086, volume: 2000, traders: 3442850,
+    top: ["Bitcoin above $103,000 on June 20?", "Will Bitcoin reach $115K in June?", "Will Solana be above $280 on October 10?", "Will Bitcoin reach $138,000 October 6-12?", "Bitcoin Up or Down on May 24?"] },
+  { id: 6, name: "2024 Dem primary / Biden", theme: "election-primary", color: "#d97b4a", markets: 13258, volume: 4300, traders: 6506998,
+    top: ["Will Biden finish his term?", "Will Kamala Harris win the 2024 Democratic Nomination?", "Will Trump launch a coin before the election?", "Will Joe Biden win the 2024 Democratic Nomination?", "Will Mike Tyson win his boxing match against Jake Paul?"] },
+  { id: 8, name: "Mixed · darts + 15-min BTC", theme: "mixed", color: "#6b7585", markets: 9291, volume: 409, traders: 2563990,
+    top: ["BTC Up/Down — Dec 4 5:30AM-5:45AM ET", "BTC Up/Down — Dec 5 2:45AM-3:00AM ET", "Will Gian van Veen win the PDC World Darts Championship?", "BTC Up/Down — Nov 21 2:45AM-3:00AM ET"] },
+  { id: 7, name: "Hourly BTC (older period)", theme: "crypto-hourly", color: "#2a64d0", markets: 8395, volume: 547, traders: 1479419,
+    top: ["BTC Up/Down — October 14, 5PM ET", "BTC Up/Down — July 19, 5PM ET", "BTC Up/Down — October 11, 4AM ET", "BTC Up/Down — October 14, 4AM ET"] },
+  { id: 9, name: "NBA + soccer + boxing", theme: "sports-b", color: "#c878fa", markets: 7701, volume: 1800, traders: 1958971,
+    top: ["Pacers vs. Thunder (NBA Finals)", "Will another team win the Serie A?", "Seahawks vs. Cardinals", "Boxing: Canelo Álvarez vs. Terence Crawford", "LoL: T1 vs KT Rolster — Game 3"] },
+  { id: 0, name: "Hourly SOL/ETH + spreads", theme: "mixed", color: "#6b7585", markets: 6328, volume: 211, traders: 2019645,
+    top: ["Solana Up/Down — January 8, 3PM ET", "Ethereum Up/Down — January 7, 2PM ET", "Pistons vs. Jazz: O/U 242.5", "Solana Up/Down — January 7, 8PM ET"] },
+  { id: 4, name: "15-min BTC", theme: "crypto-15m", color: "#5a8df0", markets: 6261, volume: 944, traders: 5735655,
+    top: ["BTC Up/Down — Jan 12, 9:45-10:00PM ET", "BTC Up/Down — Jan 20, 7:15-7:30AM ET", "BTC Up/Down — Jan 14, 9:30-9:45PM ET", "BTC Up/Down — Jan 11, 4:15-4:30PM ET"] },
+  { id: 5, name: "Hourly BTC / ETH (recent)", theme: "crypto-hourly", color: "#4279e0", markets: 4323, volume: 294, traders: 1106933,
+    top: ["BTC Up/Down — January 16, 4AM ET", "BTC Up/Down — January 23, 1PM ET", "ETH Up/Down — January 14, 1PM ET", "BTC Up/Down — January 21, 12PM ET"] },
+  { id: 3, name: "15-min ETH / SOL", theme: "crypto-15m", color: "#6e9eff", markets: 4378, volume: 197, traders: 1699661,
+    top: ["ETH Up/Down — January 16, 3:00-3:15PM ET", "SOL Up/Down — January 17, 12:45-1:00AM ET", "ETH Up/Down — January 15, 12:45-1:00PM ET", "ETH Up/Down — January 16, 9:45-10:00PM ET"] },
+  { id: 13, name: "Mixed · SOL + movies + BTC", theme: "mixed", color: "#6b7585", markets: 4300, volume: 173, traders: 682124,
+    top: ["Will Solana be above $170 on October 14?", "Tron: Ares — opening weekend $45-50M?", "BTC Up/Down — October 17, 10:00-10:15AM ET", "BTC Up/Down — October 17, 1:30-1:45AM ET"] },
+  { id: 14, name: "2020 election + COVID", theme: "election-2020", color: "#b85e3a", markets: 2413, volume: 340, traders: 272078,
+    top: ["Will Trump be inaugurated on Jan 20, 2021?", "Will Trump win the 2020 election?", "BTC ETF approved by Jan 15?", "Will Biden be inaugurated Jan 20, 2021?", "100M COVID vaccine doses by April 1?"] },
+  { id: 12, name: "Niche · weather + niche elections", theme: "noise", color: "#3a4350", markets: 2291, volume: 37, traders: 264238,
+    top: ["Will Călin Georgescu win the Romanian presidential election by 10%+?", "Will Justin Rose win the 2025 Masters?", "Will Liam Lawson win the 2025 Japanese Grand Prix?", "Highest NYC temp 35-36°F on Feb 14?"] },
+  { id: 11, name: "2025 politics (mixed)", theme: "election-2025", color: "#f4b860", markets: 1638, volume: 86, traders: 378096,
+    top: ["Will Curtis Sliwa drop out?", "Will 3 Fed rate cuts happen in 2025?", "Ukraine agrees to US-approved peace plan by Thursday?", "Will Abigail Spanberger win the Virginia Governor Election?", "Will Clair Obscur win Game of the Year 2025?"] },
+  { id: 16, name: "Eurovision 2026", theme: "noise", color: "#3a4350", markets: 16, volume: 0.188, traders: 1543,
+    top: ["Will Israel win Eurovision 2026?", "Will Sweden win Eurovision 2026?", "Will Switzerland win Eurovision 2026?", "Will Albania win Eurovision 2026?"] },
+  { id: 15, name: "Spanish influencer boxing", theme: "noise", color: "#3a4350", markets: 7, volume: 0.079, traders: 721,
+    top: ["Boxing: TheGrefg vs Westcol", "Boxing: Abby vs. RoRo", "Boxing: Viruzz vs Tomás Mazza", "Boxing: Perxitaa vs. Gaspi"] },
+  { id: 17, name: "NFL Browns draft", theme: "noise", color: "#3a4350", markets: 2, volume: 0.007, traders: 124,
+    top: ["Will the Browns draft Will Johnson?", "Will the Browns draft Tetairoa McMillan?"] },
+];
+
+const formatVol = v => {
+  if (v >= 1000) return "$" + (v/1000).toFixed(1) + "B";
+  if (v >= 1) return "$" + v.toFixed(0) + "M";
+  return "$" + (v*1000).toFixed(0) + "K";
+};
+
+// Render bubble layout
+const svg = d3.select("#bubble-svg");
+const tooltip = d3.select("#tooltip");
+
+function renderBubbles() {
+  const w = document.getElementById("bubble-svg").clientWidth;
+  const h = 620;
+  svg.attr("viewBox", `0 0 ${w} ${h}`);
+  svg.selectAll("*").remove();
+
+  // Size scale: sqrt(volume) → radius 12 - 80
+  const maxVol = d3.max(clusters, d => d.volume);
+  const scale = d3.scaleSqrt().domain([0, maxVol]).range([14, 92]);
+
+  const nodes = clusters.map(c => ({...c, r: scale(c.volume)}));
+
+  const sim = d3.forceSimulation(nodes)
+    .force("center", d3.forceCenter(w/2, h/2))
+    .force("collide", d3.forceCollide(d => d.r + 3).strength(0.95))
+    .force("charge", d3.forceManyBody().strength(8))
+    .stop();
+  for (let i = 0; i < 250; i++) sim.tick();
+
+  const g = svg.selectAll("g.bubble")
+    .data(nodes).enter().append("g")
+    .attr("class", "bubble")
+    .attr("transform", d => `translate(${d.x}, ${d.y})`)
+    .style("cursor", "pointer")
+    .on("mousemove", (e, d) => {
+      tooltip.html(`
+        <div class="t-title">Cluster ${d.id} · ${d.name}</div>
+        <div class="t-stats">${formatVol(d.volume)} · ${d.markets.toLocaleString()} markets</div>
+        <ul class="t-markets">${d.top.slice(0, 6).map(t => `<li>${t}</li>`).join('')}</ul>
+      `);
+      const rect = document.querySelector(".bubble-wrap").getBoundingClientRect();
+      tooltip.style("left", (e.clientX - rect.left + 14) + "px")
+             .style("top", (e.clientY - rect.top + 14) + "px")
+             .classed("show", true);
+    })
+    .on("mouseleave", () => tooltip.classed("show", false));
+
+  g.append("circle")
+    .attr("r", d => d.r)
+    .attr("fill", d => d.color)
+    .attr("fill-opacity", 0.92)
+    .attr("stroke", d => d.color)
+    .attr("stroke-opacity", 0.4)
+    .attr("stroke-width", 1.5);
+
+  g.filter(d => d.r > 24)
+    .append("text")
+    .attr("class", "bubble-label")
+    .attr("dy", "-0.2em")
+    .text(d => d.name.length > 18 && d.r < 60 ? d.name.split(" ")[0] : d.name);
+
+  g.filter(d => d.r > 32)
+    .append("text")
+    .attr("class", "bubble-vol")
+    .attr("dy", "1.2em")
+    .text(d => formatVol(d.volume));
+}
+
+renderBubbles();
+window.addEventListener("resize", renderBubbles);
+</script>
+
+</body>
+</html>
