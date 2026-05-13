@@ -1,0 +1,3240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Polymarket cohorts trade — patterns by behavior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d12;
+    --bg-elev: #11151c;
+    --bg-elev-2: #1a1f29;
+    --border: #1e2530;
+    --border-light: #2a3340;
+    --text: #e5e8ee;
+    --text-dim: #8a93a3;
+    --text-dimmer: #5a6373;
+    --accent: #00d09c;
+    --scalper: #6e9eff;
+    --news: #e8a25a;
+    --event: #c878fa;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum'; }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 48px 32px; }
+  header.hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    color: var(--accent);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .breadcrumb {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+  .breadcrumb a { color: var(--text-dim); text-decoration: none; border-bottom: 1px dotted; }
+  h1 {
+    font-size: 34px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15;
+    margin-bottom: 16px; max-width: 880px;
+  }
+  .lede { color: var(--text-dim); font-size: 16px; max-width: 760px; line-height: 1.55; }
+  section { margin-bottom: 48px; }
+  h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 6px; }
+  .section-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; max-width: 820px; }
+
+  /* Three archetypes hero */
+  .archetypes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .arche-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-top: 3px solid;
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .arche-card .title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .arche-card .sub { color: var(--text-dim); font-size: 12px; margin-bottom: 16px; }
+  .arche-card .stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .arche-card .stat:last-child { border-bottom: none; }
+  .arche-card .stat .l { color: var(--text-dim); }
+  .arche-card .stat .v { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .arche-card .clusters { margin-top: 14px; font-size: 11px; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  /* Cluster cards grid */
+  .clusters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 14px;
+  }
+  .cl-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-top: 3px solid;
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+  }
+  .cl-card.archetype-scalper { border-top-color: var(--scalper); }
+  .cl-card.archetype-news { border-top-color: var(--news); }
+  .cl-card.archetype-event { border-top-color: var(--event); }
+  .cl-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .cl-head .left { flex: 1; }
+  .cl-head .id { color: var(--text-dimmer); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .cl-head .name { font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .cl-head .right { text-align: right; }
+  .cl-head .vol { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; }
+  .cl-head .meta { color: var(--text-dim); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+  .key-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .key-stat {
+    background: var(--bg-elev-2);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .key-stat .l { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dimmer); }
+  .key-stat .v { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; margin-top: 2px; }
+
+  .panel { margin-bottom: 12px; }
+  .panel-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: baseline; }
+  .panel-title .note { color: var(--text-dimmer); font-size: 9px; font-family: 'JetBrains Mono', monospace; text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .panel-svg { width: 100%; display: block; }
+
+  /* Bars */
+  .bar { fill: var(--scalper); fill-opacity: 0.85; }
+  .bar-axis { fill: var(--text-dimmer); font-size: 8px; font-family: 'JetBrains Mono', monospace; }
+
+  /* Holding context */
+  .hold-bar-wrap {
+    position: relative;
+    background: var(--bg-elev-2);
+    border-radius: 4px;
+    height: 22px;
+    overflow: hidden;
+  }
+  .hold-bar-fill {
+    background: linear-gradient(90deg, var(--accent), #00b886);
+    height: 100%;
+    transition: width 0.6s ease-out;
+  }
+  .hold-bar-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-shadow: 0 0 4px rgba(0,0,0,0.7);
+  }
+
+  .footer-note {
+    margin-top: 48px;
+    padding: 20px;
+    background: var(--bg-elev);
+    border: 1px dashed var(--border-light);
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .footer-note strong { color: var(--text); }
+
+  @media (max-width: 800px) {
+    .archetypes { grid-template-columns: 1fr; }
+    .clusters-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="hero">
+    <div class="breadcrumb">↳ Companion to <a href="./index.html">the atomic networks viz</a></div>
+    <div class="eyebrow">Polymarket trading-pattern analysis · May 2026</div>
+    <h1>How the 18 cohorts actually trade — patterns by behavior, not just topology.</h1>
+    <p class="lede">
+      Per-cluster trading patterns across four dimensions: trade size, frequency, temporal cadence, and holding period. Three behavioral archetypes emerge clearly from the data — flash scalpers (hold positions for minutes), sustained news traders (hold for hours, return for weeks), and event-driven tourists (one-shot bets held until resolution). Each cluster falls into one of these patterns, and the patterns map nearly perfectly to the markets' own time horizons.
+    </p>
+  </header>
+
+  <section>
+    <h2>The three archetypes</h2>
+    <p class="section-sub">Emerge directly from the data. Holding period — how long a position is held between first buy and first sell — is the cleanest single differentiator. Activity span and trade frequency confirm the pattern.</p>
+    <div class="archetypes">
+      <div class="arche-card" style="border-top-color: var(--scalper);">
+        <div class="title">Flash scalpers</div>
+        <div class="sub">Quick in, quick out. Often automated.</div>
+        <div class="stat"><span class="l">Median holding period</span><span class="v">1.9 – 10 min</span></div>
+        <div class="stat"><span class="l">Median trade size</span><span class="v">$3.67 – $14</span></div>
+        <div class="stat"><span class="l">Median active days</span><span class="v">0.02 – 1.7</span></div>
+        <div class="stat"><span class="l">Median trades / active day</span><span class="v">4 – 10</span></div>
+        <div class="stat"><span class="l">p95 trades / trader</span><span class="v">485 – 2,843</span></div>
+        <div class="clusters">Clusters 0 · 3 · 4 · 5 · 7 · 8 · 13</div>
+      </div>
+      <div class="arche-card" style="border-top-color: var(--news);">
+        <div class="title">Sustained news traders</div>
+        <div class="sub">Multi-hour holds. Stick around for the news cycle.</div>
+        <div class="stat"><span class="l">Median holding period</span><span class="v">29 min – 7 hours</span></div>
+        <div class="stat"><span class="l">Median trade size</span><span class="v">$8 – $23</span></div>
+        <div class="stat"><span class="l">Median active days</span><span class="v">10 – 20</span></div>
+        <div class="stat"><span class="l">p95 active days</span><span class="v">200 – 410</span></div>
+        <div class="stat"><span class="l">% closed before resolution</span><span class="v">47 – 50%</span></div>
+        <div class="clusters">Clusters 1 · 6 · 10 · 11 · 12</div>
+      </div>
+      <div class="arche-card" style="border-top-color: var(--event);">
+        <div class="title">Event-driven tourists</div>
+        <div class="sub">One-shot bets held until the event resolves.</div>
+        <div class="stat"><span class="l">Median holding period</span><span class="v">95 min – 50 hours</span></div>
+        <div class="stat"><span class="l">Median trade size</span><span class="v">$8 – $11</span></div>
+        <div class="stat"><span class="l">Median active days</span><span class="v">0.01 – 0.6</span></div>
+        <div class="stat"><span class="l">Median trades / trader</span><span class="v">3 – 9</span></div>
+        <div class="stat"><span class="l">Weekend concentration</span><span class="v">40 – 86%</span></div>
+        <div class="clusters">Clusters 2 · 9 · 14 · 15 · 16 · 17</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per-cluster breakdown</h2>
+    <p class="section-sub">Each card: top-line metrics + four behavioral lenses (trade size distribution, hour of day, day of week, monthly timeline). Cards are sorted by total volume. Color-coded by archetype.</p>
+    <div class="clusters-grid" id="grid"></div>
+  </section>
+
+  <div class="footer-note">
+    <strong>Holding period methodology:</strong> for each (trader, outcome token), we computed time from first buy to first sell. Open positions (held to resolution) are tracked separately as "pct_closed". <strong>Activity span:</strong> from first to last trade per (trader, cluster). <strong>Trade size:</strong> per-trader-per-market average (total volume ÷ trade count), weighted by trade count in the histogram. <strong>Temporal:</strong> hour-of-day in UTC, day-of-week with 0=Sunday, monthly = year-month grouping.
+  </div>
+
+</div>
+
+<script>
+const data = {
+  "0": {
+    "cluster_id": 0,
+    "n_traders": 34615,
+    "total_volume": 422337820.748554,
+    "median_trade_size": 6.265000000000001,
+    "median_trades_per_trader": 10.0,
+    "p95_trades_per_trader": 1529.5999999999913,
+    "median_active_days": 0.1531712962962963,
+    "p95_active_days": 19.231369212962964,
+    "trades_per_active_day": 5.0,
+    "gini_volume": 0.9588161121212295,
+    "holding_p50_min": 1.9666666666666666,
+    "holding_p95_min": 13.766666666666667,
+    "pct_closed": 0.23731576369012242,
+    "hour_of_day": [
+      0.039015300850544214,
+      0.039908176183182584,
+      0.038666246651385704,
+      0.03930582542923547,
+      0.038231057024374,
+      0.03785479517851302,
+      0.04015729205079495,
+      0.04259509719533624,
+      0.04318935201538652,
+      0.04112117270531537,
+      0.04180620816119243,
+      0.043312781827256265,
+      0.04416205856505677,
+      0.04319558986609392,
+      0.04656396288797358,
+      0.04670066472262501,
+      0.04216216381219743,
+      0.044215146656183535,
+      0.04229169875454675,
+      0.043488437048771963,
+      0.04302112912662857,
+      0.038585486392759105,
+      0.039162620303421006,
+      0.041287736591225616
+    ],
+    "day_of_week": [
+      0.11910591956769305,
+      0.14260138149812338,
+      0.14588899426137644,
+      0.130050560434388,
+      0.14805797458447453,
+      0.18976577069674072,
+      0.1245293989572039
+    ],
+    "monthly": [
+      {
+        "ym": "2025-08",
+        "pct": 2.5216843285215837e-06
+      },
+      {
+        "ym": "2025-09",
+        "pct": 1.9642593716904968e-05
+      },
+      {
+        "ym": "2025-10",
+        "pct": 1.6656388591024143e-05
+      },
+      {
+        "ym": "2025-11",
+        "pct": 4.6651160077649295e-05
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.4492104573187342
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.5507040708545518
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.00470025368807946
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.012698870477865153
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.024116227615987026
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.05076824108470119
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.2146782533195154
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.2041217195790141
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.40212155274968775
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.06656473531969948
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.01433285556263323
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.004010738924513578
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0007933351617756719
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.000611209829153896
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0004236761472485803
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 5.756739881559142e-05
+      },
+      {
+        "label": "$10000+",
+        "pct": 7.631413099473213e-07
+      }
+    ]
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_traders": 1668380,
+    "total_volume": 34060659786.88688,
+    "median_trade_size": 23.112896508597323,
+    "median_trades_per_trader": 28.0,
+    "p95_trades_per_trader": 237.0,
+    "median_active_days": 20.07923611111111,
+    "p95_active_days": 410.65830208333284,
+    "trades_per_active_day": 1.6380237751077793,
+    "gini_volume": 0.9496062743129516,
+    "holding_p50_min": 191.0,
+    "holding_p95_min": 25168.42083333327,
+    "pct_closed": 0.4709447396247822,
+    "hour_of_day": [
+      0.03236997709894485,
+      0.03674847360378902,
+      0.04066397780074752,
+      0.04157545703724892,
+      0.03771748939708529,
+      0.04149843521049661,
+      0.04596447066588514,
+      0.04723019529502678,
+      0.047431808485738074,
+      0.04649480730946329,
+      0.043155349072495,
+      0.043401643753342746,
+      0.0446731300001984,
+      0.04592889484796506,
+      0.046523962832267375,
+      0.045773193643635676,
+      0.04584007473368279,
+      0.04340917149507965,
+      0.04062536917149305,
+      0.03953392623998717,
+      0.03879404332402116,
+      0.03763920812123469,
+      0.034859328909207135,
+      0.03214761195096461
+    ],
+    "day_of_week": [
+      0.12755630256811154,
+      0.14284164274057196,
+      0.1531887843336229,
+      0.14932292704106195,
+      0.14814244684887753,
+      0.14792341127897324,
+      0.13102448518878088
+    ],
+    "monthly": [
+      {
+        "ym": "2024-01",
+        "pct": 6.39858047636896e-05
+      },
+      {
+        "ym": "2024-02",
+        "pct": 5.968630611780367e-05
+      },
+      {
+        "ym": "2024-03",
+        "pct": 4.921261160501421e-05
+      },
+      {
+        "ym": "2024-04",
+        "pct": 3.769661439019179e-05
+      },
+      {
+        "ym": "2024-05",
+        "pct": 0.00020708527989696373
+      },
+      {
+        "ym": "2024-06",
+        "pct": 0.00053729256647157
+      },
+      {
+        "ym": "2024-07",
+        "pct": 0.0027689060808033733
+      },
+      {
+        "ym": "2024-08",
+        "pct": 0.009248373589778015
+      },
+      {
+        "ym": "2024-09",
+        "pct": 0.012444254629541263
+      },
+      {
+        "ym": "2024-10",
+        "pct": 0.06914946644633256
+      },
+      {
+        "ym": "2024-11",
+        "pct": 0.06332291472162306
+      },
+      {
+        "ym": "2024-12",
+        "pct": 0.08886445557638206
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.06756305278098557
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.04504384956610133
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.04143900948005432
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.03773308774654974
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.04386525130935115
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.0364463143933976
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.039460443899493845
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.034447604865477696
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.034330258952940486
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.0682609251074891
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.08399646766509566
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.09798457526631757
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.12267582873904036
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0078032715609017865
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.025942896158067174
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.04028086641383154
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04682511593102281
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.09437778448181085
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.09368215962050859
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.16877593628224075
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.13328322752621838
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.13801254936796176
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.1328733094166845
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.07799040463370721
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.025179315332056324
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.010855398067236385
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0037595460360602137
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0003582191716917419
+      }
+    ]
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_traders": 314852,
+    "total_volume": 11855837793.693058,
+    "median_trade_size": 15.503282250000002,
+    "median_trades_per_trader": 10.0,
+    "p95_trades_per_trader": 302.0,
+    "median_active_days": 4.429780092592592,
+    "p95_active_days": 82.83490856481485,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9854526630712142,
+    "holding_p50_min": 73.46666666666667,
+    "holding_p95_min": 1759.1,
+    "pct_closed": 0.25897920630907,
+    "hour_of_day": [
+      0.053027057007420636,
+      0.05812139997643279,
+      0.06129223274733398,
+      0.05208514244062876,
+      0.039868512676010825,
+      0.03237838674558349,
+      0.02428270672279257,
+      0.022615111533660453,
+      0.02393969146765184,
+      0.025847787336484688,
+      0.026878814059886402,
+      0.03053176247905253,
+      0.034784786403670144,
+      0.03777352580279792,
+      0.04278881616743998,
+      0.04566584810800406,
+      0.04923488438525658,
+      0.050614869237737586,
+      0.049560473400671254,
+      0.054695487913200364,
+      0.05211956158552286,
+      0.05453499936439106,
+      0.0379165262069443,
+      0.03944161623142492
+    ],
+    "day_of_week": [
+      0.18557230541506317,
+      0.10900246044266797,
+      0.12805305475946666,
+      0.13153121458940886,
+      0.12813811214271217,
+      0.13502426255666586,
+      0.18267859009401533
+    ],
+    "monthly": [
+      {
+        "ym": "2024-09",
+        "pct": 2.0304819290048802e-05
+      },
+      {
+        "ym": "2025-03",
+        "pct": 5.4785869121015824e-06
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.0002955651210376159
+      },
+      {
+        "ym": "2025-05",
+        "pct": 4.540727118674023e-05
+      },
+      {
+        "ym": "2025-06",
+        "pct": 9.285740528985732e-06
+      },
+      {
+        "ym": "2025-08",
+        "pct": 5.416681975241678e-06
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.0005414205777767282
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.0738744730690465
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.21568429051726867
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.28635474976925707
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.42316360784572027
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0010525696414289628
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.0035792660680686256
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.019949159951554434
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04019950289716652
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.09431299154647849
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.08525540166228994
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.11684665165946552
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.11385153605184117
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.14798980277118068
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.21824076321853794
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.09842764246098
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.03635715632367752
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.01680355344242366
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.006210953267622687
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0009230490372838267
+      }
+    ]
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_traders": 30611,
+    "total_volume": 393273556.51782596,
+    "median_trade_size": 3.671259843258984,
+    "median_trades_per_trader": 12.0,
+    "p95_trades_per_trader": 1600.0,
+    "median_active_days": 0.4446759259259259,
+    "p95_active_days": 13.803437500000001,
+    "trades_per_active_day": 6.0,
+    "gini_volume": 0.9785489968265262,
+    "holding_p50_min": 2.066666666666667,
+    "holding_p95_min": 11.766666666666667,
+    "pct_closed": 0.22707691881837652,
+    "hour_of_day": [
+      0.037489893533378595,
+      0.03839295275282216,
+      0.03888855221374044,
+      0.03938958914883621,
+      0.03882040838412914,
+      0.039676898268278485,
+      0.03679477385062539,
+      0.038919949242055565,
+      0.040061906520522564,
+      0.04339034232671099,
+      0.04394663101554565,
+      0.04262146593777617,
+      0.04396601297995247,
+      0.04782495332323074,
+      0.05150708805454453,
+      0.05074101810389487,
+      0.0500349357715903,
+      0.042612783519331496,
+      0.04246912895961035,
+      0.04311662689271241,
+      0.03890302291114825,
+      0.03679293212550076,
+      0.03692641334643823,
+      0.03671172081762422
+    ],
+    "day_of_week": [
+      0.17810034472709274,
+      0.13419598568821717,
+      0.12849672343945148,
+      0.1250524343528042,
+      0.1334113230839284,
+      0.1355688602168342,
+      0.16517432849167185
+    ],
+    "monthly": [
+      {
+        "ym": "2025-10",
+        "pct": 1.596161774679314e-05
+      },
+      {
+        "ym": "2025-12",
+        "pct": 1.67509285144917e-05
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.9999672874537388
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.003690904850954886
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.017752256924513737
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.030434156879724738
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.06784586479650297
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.2790698551430569
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.2163756024743314
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.3117360074714403
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.04173458758907043
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.020840917659714624
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.0075911963083409185
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0018200190785182672
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.00043135833454726404
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.00021153528574321457
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.00029647389446722095
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.00016926330907313604
+      }
+    ]
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_traders": 84262,
+    "total_volume": 1888549749.923828,
+    "median_trade_size": 5.397211829804898,
+    "median_trades_per_trader": 26.0,
+    "p95_trades_per_trader": 2842.949999999997,
+    "median_active_days": 1.6914814814814814,
+    "p95_active_days": 40.83444270833333,
+    "trades_per_active_day": 10.0,
+    "gini_volume": 0.96612317124144,
+    "holding_p50_min": 1.9,
+    "holding_p95_min": 12.5,
+    "pct_closed": 0.30377993758495164,
+    "hour_of_day": [
+      0.03690693300086666,
+      0.038197812085990906,
+      0.03904144309252452,
+      0.03879368879341635,
+      0.03767687091245075,
+      0.036481315335073504,
+      0.03753674475729689,
+      0.038817040657751364,
+      0.039585361901804575,
+      0.041055167162823925,
+      0.043140952691398164,
+      0.043488506272250885,
+      0.04472474798248874,
+      0.04743504619058642,
+      0.049432199418694256,
+      0.05214748235167884,
+      0.04870029810151738,
+      0.045222007970530186,
+      0.04305007501936109,
+      0.04299940446758288,
+      0.04207640706059785,
+      0.03822525052658454,
+      0.03652346844402696,
+      0.038741775802702376
+    ],
+    "day_of_week": [
+      0.1335988001213339,
+      0.15242683950718705,
+      0.15865467694132732,
+      0.1427903633681819,
+      0.14162456644868798,
+      0.1496110537426991,
+      0.12129369987058276
+    ],
+    "monthly": [
+      {
+        "ym": "2025-12",
+        "pct": 0.4265457227707382
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.5734542772292618
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.001144540735291529
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.005401383520122301
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.02470474561377142
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04798258004809526
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.2594633954137657
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.21227506316679304
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.34782369156809684
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.07769219901632367
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.01726911532719375
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.004904924381274391
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0006948975936921705
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.00037407141910237587
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.00018138111547904074
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 7.874518098353502e-05
+      },
+      {
+        "label": "$10000+",
+        "pct": 9.26590001498112e-06
+      }
+    ]
+  },
+  "5": {
+    "cluster_id": 5,
+    "n_traders": 71900,
+    "total_volume": 588042958.5114139,
+    "median_trade_size": 14.0,
+    "median_trades_per_trader": 8.0,
+    "p95_trades_per_trader": 485.0,
+    "median_active_days": 0.12152199074074074,
+    "p95_active_days": 28.14976099537039,
+    "trades_per_active_day": 4.0,
+    "gini_volume": 0.9499964662292961,
+    "holding_p50_min": 8.033333333333333,
+    "holding_p95_min": 63.1,
+    "pct_closed": 0.32626431528499167,
+    "hour_of_day": [
+      0.039965297504301396,
+      0.036730390419262474,
+      0.038467522251518636,
+      0.03497810861686923,
+      0.034904689530820314,
+      0.04060470393624064,
+      0.037900563753696444,
+      0.03562839195044536,
+      0.04131247946418311,
+      0.04180401182863053,
+      0.04224918787419698,
+      0.043132288697571956,
+      0.048300241331255066,
+      0.04906842250935948,
+      0.0569144237103507,
+      0.048234591460661065,
+      0.048564718374032693,
+      0.045851384619866854,
+      0.04160511991298479,
+      0.039095080629889145,
+      0.04192456415510591,
+      0.0389933039074298,
+      0.03867534876493753,
+      0.035095164796389904
+    ],
+    "day_of_week": [
+      0.1472932538931053,
+      0.13849766033313748,
+      0.1492044161515515,
+      0.1398379147425719,
+      0.1370102440342946,
+      0.14416064147822272,
+      0.14399586936711647
+    ],
+    "monthly": [
+      {
+        "ym": "2025-12",
+        "pct": 0.3483619094789284
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.6516380905210716
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0015371716494853704
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.005545212787481204
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.022405316733109644
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04916262424675028
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.21595010221374084
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.23774080926090482
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.35094773098444054
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.07595622047091158
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.022286221134532058
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.012561429406156779
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0031940539604385075
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0015190758518216383
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0008877947243789888
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.00029108660571069706
+      },
+      {
+        "label": "$10000+",
+        "pct": 1.5149970137078095e-05
+      }
+    ]
+  },
+  "6": {
+    "cluster_id": 6,
+    "n_traders": 662595,
+    "total_volume": 8589883062.909377,
+    "median_trade_size": 10.879999999999999,
+    "median_trades_per_trader": 12.0,
+    "p95_trades_per_trader": 165.0,
+    "median_active_days": 10.85199074074074,
+    "p95_active_days": 208.9537372685185,
+    "trades_per_active_day": 1.7651499885313542,
+    "gini_volume": 0.9748821120541225,
+    "holding_p50_min": 28.7,
+    "holding_p95_min": 20112.55,
+    "pct_closed": 0.33311153880996736,
+    "hour_of_day": [
+      0.040799058747709595,
+      0.04711152048881083,
+      0.05101495438692632,
+      0.04795719287821343,
+      0.03943171200265997,
+      0.035248952867089164,
+      0.03538592164885399,
+      0.038977800474423174,
+      0.04080656300782034,
+      0.04152770957666737,
+      0.03882951116351693,
+      0.04021686926886186,
+      0.04254581960117872,
+      0.044966937641009536,
+      0.045295072638672315,
+      0.04619215241678225,
+      0.04505865637569636,
+      0.042132091140970794,
+      0.04172570659343535,
+      0.04077773253842053,
+      0.04083709316006574,
+      0.039624930665767694,
+      0.0366363109724341,
+      0.036899729744013655
+    ],
+    "day_of_week": [
+      0.1345195067148376,
+      0.13978050616426863,
+      0.150097741384468,
+      0.14519944784038938,
+      0.14953020766147757,
+      0.14767585367693353,
+      0.1331967365576253
+    ],
+    "monthly": [
+      {
+        "ym": "2023-03",
+        "pct": 7.119426258906979e-06
+      },
+      {
+        "ym": "2023-04",
+        "pct": 4.810423147910122e-06
+      },
+      {
+        "ym": "2023-05",
+        "pct": 3.6879910800644265e-06
+      },
+      {
+        "ym": "2023-06",
+        "pct": 1.6547855628810817e-05
+      },
+      {
+        "ym": "2023-07",
+        "pct": 1.9402040029904157e-05
+      },
+      {
+        "ym": "2023-08",
+        "pct": 2.0492402610097116e-05
+      },
+      {
+        "ym": "2023-09",
+        "pct": 2.588007653575645e-05
+      },
+      {
+        "ym": "2023-10",
+        "pct": 2.369935137537053e-05
+      },
+      {
+        "ym": "2023-11",
+        "pct": 2.7387342455434958e-05
+      },
+      {
+        "ym": "2023-12",
+        "pct": 4.804009250379574e-05
+      },
+      {
+        "ym": "2024-01",
+        "pct": 0.000539569129757252
+      },
+      {
+        "ym": "2024-02",
+        "pct": 0.0009082399598130836
+      },
+      {
+        "ym": "2024-03",
+        "pct": 0.0010878611601560476
+      },
+      {
+        "ym": "2024-04",
+        "pct": 0.0011759239732504554
+      },
+      {
+        "ym": "2024-05",
+        "pct": 0.006704062254828767
+      },
+      {
+        "ym": "2024-06",
+        "pct": 0.01706314815641495
+      },
+      {
+        "ym": "2024-07",
+        "pct": 0.04220408714075118
+      },
+      {
+        "ym": "2024-08",
+        "pct": 0.049667683141147306
+      },
+      {
+        "ym": "2024-09",
+        "pct": 0.0530392445865422
+      },
+      {
+        "ym": "2024-10",
+        "pct": 0.1051371535020137
+      },
+      {
+        "ym": "2024-11",
+        "pct": 0.17502121717303104
+      },
+      {
+        "ym": "2024-12",
+        "pct": 0.2804893598571086
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.10577382904038343
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.04938207228411206
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.04999209807824237
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.03515704171547643
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.019138332632935722
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.0006125272141672221
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.00048190819095763596
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.0006126234226301803
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.0011544694860107763
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.001407722230004418
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.0007334612521056826
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.0012522493538639629
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.0010670480626694232
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.01301174449724824
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.029025434545243707
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.03563576293501986
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04300499978449757
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.08618661855660581
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.08163199728672187
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.12273810644690893
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.12424772978458994
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.18645167050295186
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.16105012406782374
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.06573619219532319
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.03227042962973605
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.014163832638765602
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.004522632628914063
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.000322724499649552
+      }
+    ]
+  },
+  "7": {
+    "cluster_id": 7,
+    "n_traders": 75368,
+    "total_volume": 1094312464.65205,
+    "median_trade_size": 13.930116769230768,
+    "median_trades_per_trader": 6.0,
+    "p95_trades_per_trader": 415.6499999999942,
+    "median_active_days": 0.02025462962962963,
+    "p95_active_days": 49.146881365740654,
+    "trades_per_active_day": 3.6257666344298523,
+    "gini_volume": 0.9721193122096203,
+    "holding_p50_min": 10.0,
+    "holding_p95_min": 67.46666666666667,
+    "pct_closed": 0.3451175867226558,
+    "hour_of_day": [
+      0.037366028944486686,
+      0.03331944602433126,
+      0.03355459411652826,
+      0.03418160030158782,
+      0.03555056934504775,
+      0.03719199442890131,
+      0.037463951922103,
+      0.043617478366583244,
+      0.042372564482716986,
+      0.042344438111971874,
+      0.04316596079308555,
+      0.04419192936849276,
+      0.05016830537743803,
+      0.05944390052022568,
+      0.05375946543775892,
+      0.04729413927032135,
+      0.04944561967712588,
+      0.04329674633977038,
+      0.04353301616314924,
+      0.04063737098117993,
+      0.0397462594211917,
+      0.0396294331958811,
+      0.03488264074465003,
+      0.03384254666547126
+    ],
+    "day_of_week": [
+      0.13240769461059684,
+      0.15001571670022582,
+      0.14615097886832945,
+      0.1410034375659796,
+      0.15126557451041212,
+      0.14585612974989798,
+      0.1333004679945582
+    ],
+    "monthly": [
+      {
+        "ym": "2025-05",
+        "pct": 0.0001259662571627729
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.030325628591149675
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.07444983863273764
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.11740616033161365
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.13001624682207324
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.30870507435457456
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.2751463256781135
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.06382475933257493
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.000638181951278811
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.0039838282923703415
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.009764212936485337
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.03156931687983575
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.20362748753237336
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.17051254972073462
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.35549146408270765
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.16064933362105047
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.04372420901125711
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.014130260742674119
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0038654025614856175
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0012822218320628828
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0005119871933197335
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.00023398481541581038
+      },
+      {
+        "label": "$10000+",
+        "pct": 1.5558826948370202e-05
+      }
+    ]
+  },
+  "8": {
+    "cluster_id": 8,
+    "n_traders": 75394,
+    "total_volume": 818582984.4794282,
+    "median_trade_size": 6.739267104743083,
+    "median_trades_per_trader": 10.0,
+    "p95_trades_per_trader": 527.3499999999913,
+    "median_active_days": 3.0340162037037035,
+    "p95_active_days": 34.910046296296294,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9498943333050176,
+    "holding_p50_min": 2.4,
+    "holding_p95_min": 13.266666666666667,
+    "pct_closed": 0.22065447461006585,
+    "hour_of_day": [
+      0.03104186728310029,
+      0.035149529759452694,
+      0.03842641061231415,
+      0.0398941357465905,
+      0.03774152688019689,
+      0.040584977841450265,
+      0.046811248251849166,
+      0.049194757340484244,
+      0.051728264111370874,
+      0.04872563193629953,
+      0.047326673961014594,
+      0.04571173900228364,
+      0.049298892028782064,
+      0.04917152519217633,
+      0.05226921785173582,
+      0.04525966872815085,
+      0.04358192497317097,
+      0.04180228774890651,
+      0.03987068494276911,
+      0.037661280306747445,
+      0.03664781200173875,
+      0.032986534756168494,
+      0.029914534119443635,
+      0.02919887462380319
+    ],
+    "day_of_week": [
+      0.11021527947235801,
+      0.14290132688911805,
+      0.1543318718398812,
+      0.1711078881288423,
+      0.16061313411192188,
+      0.1418041681863225,
+      0.11902633137155606
+    ],
+    "monthly": [
+      {
+        "ym": "2025-05",
+        "pct": 5.3570600804127515e-06
+      },
+      {
+        "ym": "2025-06",
+        "pct": 2.131891256490789e-06
+      },
+      {
+        "ym": "2025-07",
+        "pct": 5.685043350642104e-06
+      },
+      {
+        "ym": "2025-08",
+        "pct": 3.4984882157797563e-06
+      },
+      {
+        "ym": "2025-09",
+        "pct": 7.215631945045747e-06
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.008828544340276958
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.647128539267469
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.34354618572949164
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.0004728425479139827
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0025842895138938086
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.00916683175157935
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.01831357452785715
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.03554802943278136
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.24642416239632448
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.16986078640767358
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.30529510950705424
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.1521838274073316
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.04120576817617687
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.01218589042210135
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.003399519263988049
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0024242610099610706
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0012891382436364686
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.00011066702176322057
+      },
+      {
+        "label": "$10000+",
+        "pct": 8.144917877362245e-06
+      }
+    ]
+  },
+  "9": {
+    "cluster_id": 9,
+    "n_traders": 208587,
+    "total_volume": 3677774640.5330424,
+    "median_trade_size": 8.415,
+    "median_trades_per_trader": 5.0,
+    "p95_trades_per_trader": 94.0,
+    "median_active_days": 0.6091203703703704,
+    "p95_active_days": 175.907943287037,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9891069242285193,
+    "holding_p50_min": 95.71666666666667,
+    "holding_p95_min": 3304.1666666666647,
+    "pct_closed": 0.23047012058766678,
+    "hour_of_day": [
+      0.048846041359630596,
+      0.052284401606973153,
+      0.04758113373369661,
+      0.041743149737134305,
+      0.03212694976085632,
+      0.02461631113159978,
+      0.02368220706812064,
+      0.03055985940382675,
+      0.036635862221181516,
+      0.03878388889473138,
+      0.033674471456444886,
+      0.032342604397144786,
+      0.036830217634132856,
+      0.038836604472490786,
+      0.04214663689922712,
+      0.04676963332455184,
+      0.046122802535832286,
+      0.050054639163867036,
+      0.05436946245153262,
+      0.05632872475825714,
+      0.05906833735999588,
+      0.04198968824726162,
+      0.0394224662344078,
+      0.045183906147102285
+    ],
+    "day_of_week": [
+      0.20196509296911305,
+      0.08617053409533079,
+      0.11977871171913886,
+      0.13689423511227553,
+      0.12619430402857504,
+      0.12627098123258873,
+      0.202726140842978
+    ],
+    "monthly": [
+      {
+        "ym": "2024-08",
+        "pct": 1.5175696627707281e-05
+      },
+      {
+        "ym": "2024-09",
+        "pct": 1.4376975752564792e-05
+      },
+      {
+        "ym": "2024-10",
+        "pct": 0.0009194608474348613
+      },
+      {
+        "ym": "2024-11",
+        "pct": 0.0008019157586430585
+      },
+      {
+        "ym": "2024-12",
+        "pct": 0.004247464493861897
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.009414522955304512
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.012627244555419314
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.01363775958262042
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.024192989067774263
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.061556086645773014
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.1482263537686513
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.1315609095886574
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.16174829882437605
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.21680173258532237
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.16483708556869792
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.02981917891227795
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.010738402805853186
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.008841041366952206
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0049912067487654106
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.005509243796368243
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.023419760700563404
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.03538446629005203
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.08340795826843171
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.06704323249792898
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.11386078907498938
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.11033290552955793
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.14232041193762895
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.20332518149933487
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.11202918898814179
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.06014714302202167
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.025132284816941828
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.011757836882826715
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0013383899464470964
+      }
+    ]
+  },
+  "10": {
+    "cluster_id": 10,
+    "n_traders": 395337,
+    "total_volume": 3955329866.187668,
+    "median_trade_size": 10.206391428571429,
+    "median_trades_per_trader": 6.0,
+    "p95_trades_per_trader": 112.0,
+    "median_active_days": 2.011296296296296,
+    "p95_active_days": 185.23518749999988,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9760981895711978,
+    "holding_p50_min": 277.775,
+    "holding_p95_min": 5688.7058333333325,
+    "pct_closed": 0.22280474318843432,
+    "hour_of_day": [
+      0.03141388377539821,
+      0.03262043350877648,
+      0.03578996949190628,
+      0.03174273164112802,
+      0.027810871425237884,
+      0.031084711815188362,
+      0.03465072337887941,
+      0.04024113709628631,
+      0.044416662345406935,
+      0.04336611008841297,
+      0.04014223426413268,
+      0.041628423518023976,
+      0.049401235448157846,
+      0.06354849965862049,
+      0.07826087661074957,
+      0.07662301114020759,
+      0.06226065622650315,
+      0.043755725669147066,
+      0.03467989188208147,
+      0.035756209650237236,
+      0.035972272636919114,
+      0.029922292946839863,
+      0.028862341949925242,
+      0.026049093831833858
+    ],
+    "day_of_week": [
+      0.11598244920359183,
+      0.14765625675196833,
+      0.1461103260822595,
+      0.15117316800193592,
+      0.15281940591321183,
+      0.17813069866127373,
+      0.10812769538575885
+    ],
+    "monthly": [
+      {
+        "ym": "2024-04",
+        "pct": 3.45700778691004e-06
+      },
+      {
+        "ym": "2024-05",
+        "pct": 5.293543173705999e-06
+      },
+      {
+        "ym": "2024-06",
+        "pct": 7.502787212528196e-05
+      },
+      {
+        "ym": "2024-07",
+        "pct": 1.209952725418514e-05
+      },
+      {
+        "ym": "2024-08",
+        "pct": 7.508188787195243e-06
+      },
+      {
+        "ym": "2024-09",
+        "pct": 2.9978739402110502e-05
+      },
+      {
+        "ym": "2024-10",
+        "pct": 8.934204499295634e-05
+      },
+      {
+        "ym": "2024-11",
+        "pct": 4.5481258696535216e-05
+      },
+      {
+        "ym": "2024-12",
+        "pct": 0.0006471086451122232
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.0013964150829249742
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.0018711594804117296
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.021020930021519873
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.0368347420640065
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.061491471993915664
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.07728778293448106
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.06602220479314129
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.056242761889946154
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.03364095301062166
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.08889614500419162
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.15583785985290433
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.17211161597829
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.22643066106631404
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.013597086822750569
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.02182970779641681
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.02799420086943746
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.03285826484136656
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.09657116142497861
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.08398308875003241
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.13553371878970158
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.13781688337784231
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.16686463437821394
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.19470313485787377
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.059634410623384926
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.019535118877855272
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.006496527867804022
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0024579325364930383
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.00012412818584873862
+      }
+    ]
+  },
+  "11": {
+    "cluster_id": 11,
+    "n_traders": 96221,
+    "total_volume": 171413653.063006,
+    "median_trade_size": 7.3999999999999995,
+    "median_trades_per_trader": 4.0,
+    "p95_trades_per_trader": 54.0,
+    "median_active_days": 0.04400462962962963,
+    "p95_active_days": 61.26668981481482,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9598651038482786,
+    "holding_p50_min": 417.1,
+    "holding_p95_min": 28893.55,
+    "pct_closed": 0.25791842402438653,
+    "hour_of_day": [
+      0.03328143084801059,
+      0.041885471713883536,
+      0.04177255198044053,
+      0.02869212932852059,
+      0.026047372042291763,
+      0.025541447354218687,
+      0.03335228244546503,
+      0.03288344414043451,
+      0.05436088814691521,
+      0.04718605684844345,
+      0.029777044414541626,
+      0.04190429166945737,
+      0.04384440767787764,
+      0.04318349512037299,
+      0.0397128739013159,
+      0.03875637733568103,
+      0.04555370246646588,
+      0.048318021823399074,
+      0.04660374528186481,
+      0.04416711456315839,
+      0.06412180275247385,
+      0.04394625684921839,
+      0.03324932621791405,
+      0.07185846507763509
+    ],
+    "day_of_week": [
+      0.09515701654993682,
+      0.14250581066128343,
+      0.15981408098005473,
+      0.175527083299891,
+      0.18648140450007278,
+      0.15401255291036775,
+      0.0865020510983935
+    ],
+    "monthly": [
+      {
+        "ym": "2024-12",
+        "pct": 0.0001356143857526294
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.0027311076706264224
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.0017308823846876413
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.001290274013017874
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.003105292669682657
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.004102196786990761
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.004866619100151501
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.009653530153166763
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.01728612919456679
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.02741237234949986
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.27600848669290756
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.48352119154674017
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.11480338958470447
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.053352913467504856
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.02483210108751667
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.023842946363680142
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.03456201811918899
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04713236462224751
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.1578819911291586
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.12226218080109909
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.22147240690072417
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.14653217409787372
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.1302089070421506
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.06507442462137293
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.018169006522221663
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0049247395511883415
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.002248984691073197
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0007796443360513409
+      },
+      {
+        "label": "$10000+",
+        "pct": 7.611011445300629e-05
+      }
+    ]
+  },
+  "12": {
+    "cluster_id": 12,
+    "n_traders": 58437,
+    "total_volume": 73439782.572666,
+    "median_trade_size": 6.7750384,
+    "median_trades_per_trader": 4.0,
+    "p95_trades_per_trader": 40.0,
+    "median_active_days": 0.5733564814814814,
+    "p95_active_days": 103.1919097222222,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9666113565305974,
+    "holding_p50_min": 324.3333333333333,
+    "holding_p95_min": 18128.55333333325,
+    "pct_closed": 0.28769164617954923,
+    "hour_of_day": [
+      0.023466942660111824,
+      0.024141926629242555,
+      0.025028405575367584,
+      0.02535352285383222,
+      0.026702365818811802,
+      0.029685794962369644,
+      0.033839196319087425,
+      0.035410783993880146,
+      0.040369666220427265,
+      0.04696875949196207,
+      0.04941895129990663,
+      0.05437895849973563,
+      0.056069793342408115,
+      0.06118842177498284,
+      0.06553531853618477,
+      0.06225152152636375,
+      0.05502131824369171,
+      0.051204283898257416,
+      0.04602378193517904,
+      0.043876207940061425,
+      0.041995252612750444,
+      0.03978918000697484,
+      0.033796447334375805,
+      0.028483198524035053
+    ],
+    "day_of_week": [
+      0.12636824875409208,
+      0.14924233049465074,
+      0.15903522291345581,
+      0.15418771304181525,
+      0.1353039115321011,
+      0.14173200886478945,
+      0.13413056439909551
+    ],
+    "monthly": [
+      {
+        "ym": "2024-08",
+        "pct": 0.0005264874959219719
+      },
+      {
+        "ym": "2024-09",
+        "pct": 0.0006108604920633135
+      },
+      {
+        "ym": "2024-10",
+        "pct": 0.0008111057362387643
+      },
+      {
+        "ym": "2024-11",
+        "pct": 0.009134783048902589
+      },
+      {
+        "ym": "2024-12",
+        "pct": 0.014845147427748591
+      },
+      {
+        "ym": "2025-01",
+        "pct": 0.05880572836395136
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.21195171614674152
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.1924694288510648
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.09945663790484977
+      },
+      {
+        "ym": "2025-05",
+        "pct": 0.15804974631852495
+      },
+      {
+        "ym": "2025-06",
+        "pct": 0.05430358528984937
+      },
+      {
+        "ym": "2025-07",
+        "pct": 0.08599070772069163
+      },
+      {
+        "ym": "2025-08",
+        "pct": 0.0806977084294248
+      },
+      {
+        "ym": "2025-09",
+        "pct": 0.023191324206050107
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.004713638051096286
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.004335647028383076
+      },
+      {
+        "ym": "2025-12",
+        "pct": 0.0001057474884971482
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.026773801622211473
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.035184101877580407
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.03999730006412348
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04185013105938734
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.13228448324352296
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.1895557480509838
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.21997052570001463
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.15886647692117312
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.08953831096511458
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.04501130598148294
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.013772485403471667
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.004652889493874521
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.002143074101990078
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.00021486989683995006
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.00018449561822906705
+      }
+    ]
+  },
+  "13": {
+    "cluster_id": 13,
+    "n_traders": 45199,
+    "total_volume": 345585233.017718,
+    "median_trade_size": 6.505878,
+    "median_trades_per_trader": 5.0,
+    "p95_trades_per_trader": 190.0,
+    "median_active_days": 0.11412037037037037,
+    "p95_active_days": 14.803004629629621,
+    "trades_per_active_day": 3.0,
+    "gini_volume": 0.9474196403012158,
+    "holding_p50_min": 2.8666666666666667,
+    "holding_p95_min": 17.133333333333333,
+    "pct_closed": 0.20893576380641887,
+    "hour_of_day": [
+      0.030836433792763757,
+      0.03652621611823372,
+      0.04485259619296614,
+      0.04461009445150659,
+      0.040192228890479055,
+      0.04360234876084288,
+      0.0449977076768114,
+      0.04680332305298006,
+      0.0454323117014151,
+      0.04547151128010485,
+      0.0436181746777052,
+      0.04321741376762246,
+      0.045868620055527054,
+      0.05029257250765548,
+      0.0480043884050081,
+      0.04650092630308773,
+      0.05289849232576944,
+      0.04245752628258708,
+      0.041536214445556045,
+      0.03746262344519497,
+      0.03861475019277184,
+      0.03043494245574891,
+      0.029890043964397043,
+      0.025878539253265068
+    ],
+    "day_of_week": [
+      0.1445699940129339,
+      0.19126277912352177,
+      0.1563919539090867,
+      0.10767150363496963,
+      0.12894007504406302,
+      0.1411912825006507,
+      0.1299724117747743
+    ],
+    "monthly": [
+      {
+        "ym": "2025-09",
+        "pct": 1.4852014286176889e-05
+      },
+      {
+        "ym": "2025-10",
+        "pct": 0.7750613741229703
+      },
+      {
+        "ym": "2025-11",
+        "pct": 0.2248512181208209
+      },
+      {
+        "ym": "2025-12",
+        "pct": 7.255574192263464e-05
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0020856123668096926
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.007938036422495494
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.01952358146828961
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.03394975685304808
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.21588474057791865
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.19897292234319985
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.3050625647188696
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.10468271836660956
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.05666518227682353
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.033483379256897726
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.008696097840200605
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.007486754316275349
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0039716964433321395
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0015592180244045377
+      },
+      {
+        "label": "$10000+",
+        "pct": 3.773872482553144e-05
+      }
+    ]
+  },
+  "14": {
+    "cluster_id": 14,
+    "n_traders": 47175,
+    "total_volume": 468653282.176315,
+    "median_trade_size": 7.656528741935484,
+    "median_trades_per_trader": 3.0,
+    "p95_trades_per_trader": 73.0,
+    "median_active_days": 0.07268518518518519,
+    "p95_active_days": 317.14280324073906,
+    "trades_per_active_day": 1.0,
+    "gini_volume": 0.97223981226189,
+    "holding_p50_min": 3040.483333333333,
+    "holding_p95_min": 76148.96666666666,
+    "pct_closed": 0.35492382810297585,
+    "hour_of_day": [
+      0.04162216826715604,
+      0.03998971269653762,
+      0.0405062573831018,
+      0.037788404116664995,
+      0.03436438849391262,
+      0.03298693599640816,
+      0.03242898055438104,
+      0.03127383842830926,
+      0.032575007955224076,
+      0.03101447632830447,
+      0.030249467108962595,
+      0.031635637660248725,
+      0.03552824867376607,
+      0.04467566660418728,
+      0.04545593241764708,
+      0.05167190476398049,
+      0.05189203562196775,
+      0.0516610071967534,
+      0.05445732294722526,
+      0.05154113395725538,
+      0.05170241795221635,
+      0.05233011782449686,
+      0.04903469349502417,
+      0.0436142435562685
+    ],
+    "day_of_week": [
+      0.1253830494880323,
+      0.13334045307725503,
+      0.15102938420027112,
+      0.16280965437275782,
+      0.15327210353560672,
+      0.14668125487666134,
+      0.12748410044941566
+    ],
+    "monthly": [
+      {
+        "ym": "2023-03",
+        "pct": 0.0674603001625917
+      },
+      {
+        "ym": "2023-04",
+        "pct": 0.01949138874237715
+      },
+      {
+        "ym": "2023-05",
+        "pct": 0.03378463791743131
+      },
+      {
+        "ym": "2023-06",
+        "pct": 0.05159562179339084
+      },
+      {
+        "ym": "2023-07",
+        "pct": 0.03963445200493442
+      },
+      {
+        "ym": "2023-08",
+        "pct": 0.07119598620803892
+      },
+      {
+        "ym": "2023-09",
+        "pct": 0.030487034074513204
+      },
+      {
+        "ym": "2023-10",
+        "pct": 0.07364357980724383
+      },
+      {
+        "ym": "2023-11",
+        "pct": 0.07372422180472431
+      },
+      {
+        "ym": "2023-12",
+        "pct": 0.059117122693529894
+      },
+      {
+        "ym": "2024-01",
+        "pct": 0.1573586912457663
+      },
+      {
+        "ym": "2024-02",
+        "pct": 0.12609575038468412
+      },
+      {
+        "ym": "2024-03",
+        "pct": 0.10932003539529836
+      },
+      {
+        "ym": "2024-04",
+        "pct": 0.05789877467754099
+      },
+      {
+        "ym": "2024-05",
+        "pct": 0.01854112088017471
+      },
+      {
+        "ym": "2024-06",
+        "pct": 0.007641374139637068
+      },
+      {
+        "ym": "2024-07",
+        "pct": 0.0026045185672750417
+      },
+      {
+        "ym": "2024-08",
+        "pct": 0.00040538950084783074
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.07375647570985551
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.029267184233025833
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.01972547404076121
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.023250434438597437
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.046257697696126754
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.05895899847803449
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.12498181324780247
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.1215434953548174
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.14339661505715953
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.17902384957553347
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.09803476816590895
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.05175990544523622
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.022862995313130918
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.006549682937475172
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0006306103065346431
+      }
+    ]
+  },
+  "15": {
+    "cluster_id": 15,
+    "n_traders": 250,
+    "total_volume": 157545.63066,
+    "median_trade_size": 11.373395833333333,
+    "median_trades_per_trader": 9.0,
+    "p95_trades_per_trader": 53.94999999999985,
+    "median_active_days": 0.05912615740740741,
+    "p95_active_days": 6.316298032407403,
+    "trades_per_active_day": 8.0,
+    "gini_volume": 0.8252925031205931,
+    "holding_p50_min": 124.38333333333334,
+    "holding_p95_min": 5553.593333333332,
+    "pct_closed": 0.29800498753117205,
+    "hour_of_day": [
+      0.07976653696498054,
+      0.011284046692607004,
+      0.005447470817120622,
+      0.007003891050583658,
+      0.01556420233463035,
+      0.007782101167315175,
+      0.005447470817120622,
+      0.016731517509727626,
+      0.010505836575875487,
+      0.010894941634241245,
+      0.012840466926070038,
+      0.017509727626459144,
+      0.007782101167315175,
+      0.008560311284046693,
+      0.020233463035019456,
+      0.03268482490272374,
+      0.02840466926070039,
+      0.035408560311284046,
+      0.12217898832684825,
+      0.14007782101167315,
+      0.10116731517509728,
+      0.12762645914396886,
+      0.1066147859922179,
+      0.06848249027237355
+    ],
+    "day_of_week": [
+      0.09182879377431907,
+      0.009727626459143969,
+      0.01634241245136187,
+      0.01867704280155642,
+      0.028793774319066146,
+      0.0622568093385214,
+      0.7723735408560312
+    ],
+    "monthly": [
+      {
+        "ym": "2025-07",
+        "pct": 1.0
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.0019455252918287938
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.0007782101167315176
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.017509727626459144
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04105058365758755
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.12042801556420234
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.12743190661478598
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.22840466926070038
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.3178988326848249
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.1075875486381323
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.03463035019455253
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0023346303501945525
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0
+      }
+    ]
+  },
+  "16": {
+    "cluster_id": 16,
+    "n_traders": 606,
+    "total_volume": 376141.18124199996,
+    "median_trade_size": 4.937523500000001,
+    "median_trades_per_trader": 4.0,
+    "p95_trades_per_trader": 98.5,
+    "median_active_days": 0.20488425925925927,
+    "p95_active_days": 41.54173611111111,
+    "trades_per_active_day": 2.3522638257790134,
+    "gini_volume": 0.9109196639729904,
+    "holding_p50_min": 2986.5,
+    "holding_p95_min": 39913.90416666665,
+    "pct_closed": 0.2936117936117936,
+    "hour_of_day": [
+      0.03768115942028986,
+      0.012393803098450775,
+      0.06306846576711644,
+      0.04337831084457771,
+      0.04787606196901549,
+      0.027486256871564217,
+      0.05027486256871564,
+      0.02638680659670165,
+      0.08385807096451774,
+      0.048875562218890556,
+      0.0384807596201899,
+      0.03638180909545227,
+      0.03278360819590205,
+      0.055572213893053474,
+      0.05687156421789105,
+      0.02478760619690155,
+      0.02688655672163918,
+      0.03738130934532734,
+      0.04557721139430285,
+      0.02158920539730135,
+      0.036281859070464766,
+      0.05867066466766617,
+      0.06696651674162919,
+      0.02048975512243878
+    ],
+    "day_of_week": [
+      0.1549225387306347,
+      0.26456771614192903,
+      0.1551224387806097,
+      0.04177911044477761,
+      0.16831584207896053,
+      0.10474762618690654,
+      0.11054472763618191
+    ],
+    "monthly": [
+      {
+        "ym": "2025-12",
+        "pct": 0.17351324337831084
+      },
+      {
+        "ym": "2026-01",
+        "pct": 0.8264867566216891
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.019790104947526237
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.08935532233883059
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.06496751624187906
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.05812093953023488
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.23758120939530236
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.07201399300349826
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.3344327836081959
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.04827586206896552
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.06516741629185407
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.004947526236881559
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.001549225387306347
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0010994502748625688
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0021489255372313843
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0005497251374312844
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0
+      }
+    ]
+  },
+  "17": {
+    "cluster_id": 17,
+    "n_traders": 97,
+    "total_volume": 13543.966471999998,
+    "median_trade_size": 1.3005,
+    "median_trades_per_trader": 4.0,
+    "p95_trades_per_trader": 56.39999999999981,
+    "median_active_days": 0.005509259259259259,
+    "p95_active_days": 88.52963194444445,
+    "trades_per_active_day": 2.0,
+    "gini_volume": 0.9030976840193532,
+    "holding_p50_min": 23.766666666666666,
+    "holding_p95_min": 64190.50416666663,
+    "pct_closed": 0.3968253968253968,
+    "hour_of_day": [
+      0.02459016393442623,
+      0,
+      0.01639344262295082,
+      0.03961748633879782,
+      0.01639344262295082,
+      0.01639344262295082,
+      0.01912568306010929,
+      0.05874316939890711,
+      0.06693989071038252,
+      0.0546448087431694,
+      0.03825136612021858,
+      0.05191256830601093,
+      0.11748633879781421,
+      0.10655737704918032,
+      0.07377049180327869,
+      0.06284153005464481,
+      0.10245901639344263,
+      0.04781420765027322,
+      0.02459016393442623,
+      0.00546448087431694,
+      0.00819672131147541,
+      0.00546448087431694,
+      0.012295081967213115,
+      0.030054644808743168
+    ],
+    "day_of_week": [
+      0.02185792349726776,
+      0.0273224043715847,
+      0.1680327868852459,
+      0.43989071038251365,
+      0.07513661202185792,
+      0.11475409836065574,
+      0.15300546448087432
+    ],
+    "monthly": [
+      {
+        "ym": "2025-01",
+        "pct": 0.15846994535519127
+      },
+      {
+        "ym": "2025-02",
+        "pct": 0.04371584699453552
+      },
+      {
+        "ym": "2025-03",
+        "pct": 0.020491803278688523
+      },
+      {
+        "ym": "2025-04",
+        "pct": 0.7773224043715847
+      }
+    ],
+    "size_dist": [
+      {
+        "label": "<$0.10",
+        "pct": 0.036885245901639344
+      },
+      {
+        "label": "$0.10\u2013$0",
+        "pct": 0.16939890710382513
+      },
+      {
+        "label": "$0.50\u2013$1",
+        "pct": 0.05259562841530055
+      },
+      {
+        "label": "$1\u2013$2",
+        "pct": 0.04781420765027322
+      },
+      {
+        "label": "$2\u2013$5",
+        "pct": 0.04234972677595628
+      },
+      {
+        "label": "$5\u2013$10",
+        "pct": 0.10724043715846994
+      },
+      {
+        "label": "$10\u2013$25",
+        "pct": 0.5355191256830601
+      },
+      {
+        "label": "$25\u2013$50",
+        "pct": 0.0
+      },
+      {
+        "label": "$50\u2013$100",
+        "pct": 0.001366120218579235
+      },
+      {
+        "label": "$100\u2013$250",
+        "pct": 0.006830601092896175
+      },
+      {
+        "label": "$250\u2013$500",
+        "pct": 0.0
+      },
+      {
+        "label": "$500\u2013$1000",
+        "pct": 0.0
+      },
+      {
+        "label": "$1000\u2013$2500",
+        "pct": 0.0
+      },
+      {
+        "label": "$2500\u2013$10000",
+        "pct": 0.0
+      },
+      {
+        "label": "$10000+",
+        "pct": 0.0
+      }
+    ]
+  }
+};
+
+const archetypeOf = cid => {
+  const scalper = new Set([0, 3, 4, 5, 7, 8, 13]);
+  const news = new Set([1, 6, 10, 11, 12]);
+  return scalper.has(cid) ? 'scalper' : news.has(cid) ? 'news' : 'event';
+};
+
+const clusterNames = {
+  1: '2024 election mega', 2: 'NFL + esports', 10: 'Crypto daily / price-target',
+  6: '2024 Dem primary / Biden', 8: 'Mixed · darts + 15-min BTC', 7: 'Hourly BTC (older)',
+  9: 'NBA + soccer + boxing', 0: 'Hourly SOL/ETH + spreads', 4: '15-min BTC',
+  5: 'Hourly BTC/ETH (recent)', 3: '15-min ETH/SOL', 13: 'Mixed SOL + movies + BTC',
+  14: '2020 election + COVID', 12: 'Niche · weather + niche elections', 11: '2025 politics',
+  16: 'Eurovision 2026', 15: 'Spanish influencer boxing', 17: 'NFL Browns draft'
+};
+
+const fmtVol = v => v >= 1e9 ? '$' + (v/1e9).toFixed(1) + 'B'
+                  : v >= 1e6 ? '$' + (v/1e6).toFixed(0) + 'M'
+                  : '$' + (v/1e3).toFixed(0) + 'K';
+const fmtTraders = n => n >= 1e6 ? (n/1e6).toFixed(2) + 'M'
+                       : n >= 1e3 ? (n/1e3).toFixed(0) + 'K'
+                       : n.toLocaleString();
+const fmtMin = m => {
+  if (!m) return '—';
+  if (m < 60) return m.toFixed(1) + ' min';
+  if (m < 60*24) return (m/60).toFixed(1) + ' hr';
+  return (m/60/24).toFixed(1) + ' d';
+};
+
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function barChart(values, w, h, color, opts = {}) {
+  const max = Math.max(...values, 0.001);
+  const n = values.length;
+  const barW = w / n - 1;
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("class", "panel-svg");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("style", `height: ${h}px;`);
+  values.forEach((v, i) => {
+    const bh = (v / max) * (h - 2);
+    const rect = document.createElementNS(svgNS, "rect");
+    rect.setAttribute("x", i * (w / n) + 0.5);
+    rect.setAttribute("y", h - bh);
+    rect.setAttribute("width", barW);
+    rect.setAttribute("height", bh);
+    rect.setAttribute("fill", color);
+    rect.setAttribute("fill-opacity", "0.85");
+    rect.setAttribute("rx", "0.5");
+    svg.appendChild(rect);
+  });
+  if (opts.labels) {
+    opts.labels.forEach((lab, i) => {
+      const text = document.createElementNS(svgNS, "text");
+      text.setAttribute("x", i * (w / n) + (w / n) / 2);
+      text.setAttribute("y", h - 1);
+      text.setAttribute("fill", "rgba(255,255,255,0.4)");
+      text.setAttribute("font-size", "8");
+      text.setAttribute("font-family", "JetBrains Mono, monospace");
+      text.setAttribute("text-anchor", "middle");
+      text.textContent = lab;
+      svg.appendChild(text);
+    });
+  }
+  return svg;
+}
+
+function buildCard(c) {
+  const arche = archetypeOf(c.cluster_id);
+  const palette = { scalper: 'var(--scalper)', news: 'var(--news)', event: 'var(--event)' };
+  const color = palette[arche];
+
+  const card = document.createElement('div');
+  card.className = `cl-card archetype-${arche}`;
+  card.innerHTML = `
+    <div class="cl-head">
+      <div class="left">
+        <div class="id">Cluster ${c.cluster_id}</div>
+        <div class="name">${clusterNames[c.cluster_id] || ''}</div>
+      </div>
+      <div class="right">
+        <div class="vol">${fmtVol(c.total_volume)}</div>
+        <div class="meta">${fmtTraders(c.n_traders)} traders</div>
+      </div>
+    </div>
+
+    <div class="key-row">
+      <div class="key-stat"><div class="l">median hold</div><div class="v">${fmtMin(c.holding_p50_min)}</div></div>
+      <div class="key-stat"><div class="l">median trade</div><div class="v">$${c.median_trade_size.toFixed(1)}</div></div>
+      <div class="key-stat"><div class="l">median active</div><div class="v">${c.median_active_days < 1 ? (c.median_active_days*24).toFixed(1) + 'h' : c.median_active_days.toFixed(1) + 'd'}</div></div>
+    </div>
+
+    <div class="panel" data-panel="size">
+      <div class="panel-title"><span>Trade size distribution</span><span class="note">median $${c.median_trade_size.toFixed(2)}</span></div>
+    </div>
+    <div class="panel" data-panel="hod">
+      <div class="panel-title"><span>Hour of day (UTC)</span><span class="note">peak ${c.hour_of_day.indexOf(Math.max(...c.hour_of_day))}h · ${(Math.max(...c.hour_of_day)*100).toFixed(0)}%</span></div>
+    </div>
+    <div class="panel" data-panel="dow">
+      <div class="panel-title"><span>Day of week</span><span class="note">${(c.day_of_week[0] + c.day_of_week[6])*100 | 0}% weekend</span></div>
+    </div>
+    <div class="panel" data-panel="monthly">
+      <div class="panel-title"><span>Monthly activity</span><span class="note">${c.monthly.length} months active</span></div>
+    </div>
+  `;
+
+  // Size dist
+  const sizeVals = c.size_dist.map(b => b.pct);
+  card.querySelector('[data-panel="size"]').appendChild(barChart(sizeVals, 360, 42, color));
+
+  // Hour of day
+  card.querySelector('[data-panel="hod"]').appendChild(barChart(c.hour_of_day, 360, 38, color));
+
+  // Day of week
+  const dowChart = barChart(c.day_of_week, 360, 38, color);
+  card.querySelector('[data-panel="dow"]').appendChild(dowChart);
+  // Add labels under DoW
+  const dowLabels = document.createElement('div');
+  dowLabels.style.display = 'flex';
+  dowLabels.style.justifyContent = 'space-around';
+  dowLabels.style.fontSize = '9px';
+  dowLabels.style.color = 'var(--text-dimmer)';
+  dowLabels.style.fontFamily = 'JetBrains Mono, monospace';
+  dowLabels.style.marginTop = '2px';
+  dowLabels.innerHTML = DAY_NAMES.map(d => `<span>${d}</span>`).join('');
+  card.querySelector('[data-panel="dow"]').appendChild(dowLabels);
+
+  // Monthly
+  const monthlyVals = c.monthly.map(m => m.pct);
+  card.querySelector('[data-panel="monthly"]').appendChild(barChart(monthlyVals, 360, 38, color));
+  // Add month range
+  if (c.monthly.length > 0) {
+    const mLabels = document.createElement('div');
+    mLabels.style.display = 'flex';
+    mLabels.style.justifyContent = 'space-between';
+    mLabels.style.fontSize = '9px';
+    mLabels.style.color = 'var(--text-dimmer)';
+    mLabels.style.fontFamily = 'JetBrains Mono, monospace';
+    mLabels.style.marginTop = '2px';
+    mLabels.innerHTML = `<span>${c.monthly[0].ym}</span><span>${c.monthly[c.monthly.length-1].ym}</span>`;
+    card.querySelector('[data-panel="monthly"]').appendChild(mLabels);
+  }
+
+  return card;
+}
+
+// Render
+const grid = document.getElementById('grid');
+const sorted = Object.values(data).sort((a, b) => b.total_volume - a.total_volume);
+sorted.forEach(c => grid.appendChild(buildCard(c)));
+</script>
+
+</body>
+</html>
